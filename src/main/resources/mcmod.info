@@ -1,0 +1,16 @@
+[
+{
+  "modid": "wrapfix",
+  "name": "WrapFix",
+  "description": "Fix line wrapping",
+  "version": "0.2",
+  "mcversion": "1.12.2",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["gkappa"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

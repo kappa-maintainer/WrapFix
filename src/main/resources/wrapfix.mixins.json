@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "gkappa.wrapfix.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"refmap": "wrapfix.refmap.json",
+	"target": "@env(DEFAULT)",
+	"client": [
+		"MixinFontRenderer"
+	],
+	"setSourceFile": true,
+	"minVersion": "0.8"
+}

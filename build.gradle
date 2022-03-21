@@ -24,7 +24,7 @@ apply plugin: 'org.spongepowered.mixin'
 def travisBuildNumber = System.getenv("TRAVIS_BUILD_NUMBER")
 def versionSuffix = travisBuildNumber != null ? travisBuildNumber : "SNAPSHOT"
 
-version "0.2"
+version "0.3"
 group "gkappa.wrapfix"
 archivesBaseName = "WrapFix"
 
@@ -81,7 +81,7 @@ configurations {
 repositories {
     maven { url "https://repo.spongepowered.org/maven" }
     maven {
-        url "https://cursemaven.com"
+        url "https://cfa2.cursemaven.com"
         content {
             includeGroup "curse.maven"
         }
@@ -110,13 +110,16 @@ dependencies {
         exclude module: "gson"
         exclude module: "commons-io"
     }
-    //compileOnly fg.deobf( "curse.maven:IndustrialWiresRE-521139:3474268" )
-    //compileOnly fg.deobf( "curse.maven:ImmersiveEngineering-231951:2974106" )
-    //compileOnly fg.deobf( "curse.maven:MixinBooter-419286:3614486" )
-    compileOnly ("blus:immersiveengineering:0.12-98")
-    compileOnly ("mantle:industrialwires:1.8-38")
-    compileOnly ("loli:mixinbooter:3.2")
-    compileOnly ("funguy:betterquesting:3.5.329")
+    compileOnly fg.deobf( "curse.maven:IndustrialWiresRE-521139:3474268" )
+    compileOnly fg.deobf( "curse.maven:ImmersiveEngineering-231951:2974106" )
+    compileOnly fg.deobf( "curse.maven:MixinBooter-419286:3687785" )
+    compileOnly fg.deobf( "curse.maven:BetterQuesting-238856:2950248" )
+    compileOnly fg.deobf( "curse.maven:Botania-225643:3330934" )
+    compileOnly fg.deobf( "curse.maven:Baubles-227083:2518667" )
+    //compileOnly ("blus:immersiveengineering:0.12-98")
+    //compileOnly ("mantle:industrialwires:1.8-38")
+    //compileOnly ("loli:mixinbooter:3.2")
+    //compileOnly ("funguy:betterquesting:3.5.329")
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..

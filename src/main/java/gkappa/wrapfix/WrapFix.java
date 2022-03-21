@@ -7,7 +7,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
 
 
-@Mod(modid = "wrapfix", name = "WrapFix", version = "0.1", dependencies = "after:industrialwires@[1.7-36,);")
+@Mod(modid = "wrapfix", name = "WrapFix", version = "0.1", dependencies = "required-after:mixinbooter@[4.2,);after:industrialwires@[1.7-36,);")
 public class WrapFix {
     public static final String MODID = "wrapfix";
     public static final String NAME = "WrapFix";

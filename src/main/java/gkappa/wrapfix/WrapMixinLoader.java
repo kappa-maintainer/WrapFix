@@ -1,18 +1,31 @@
 package gkappa.wrapfix;
 
+import com.google.common.collect.Lists;
 import net.minecraftforge.fml.common.Loader;
-import org.spongepowered.asm.mixin.Mixins;
-import zone.rong.mixinbooter.MixinLoader;
+import zone.rong.mixinbooter.ILateMixinLoader;
 
-@MixinLoader
-public class WrapMixinLoader {
-    public WrapMixinLoader() {
-        if (Loader.isModLoaded("industrialwires")) {
-            Mixins.addConfiguration("wrapfix.IW.mixins.json");
-        }
-        if (Loader.isModLoaded("betterquesting")) {
-            Mixins.addConfiguration("wrapfix.BQ.mixins.json");
-        }
+import java.util.List;
+
+public class WrapMixinLoader implements ILateMixinLoader {
+
+    @Override
+    public List<String> getMixinConfigs() {
+        return Lists.newArrayList("wrapfix.BQ.mixins.json", "wrapfix.IW.mixins.json", "wrapfix.Bot.mixins.json");
     }
+
+    @Override
+    public boolean shouldMixinConfigQueue(String mixinConfig) {
+        if(mixinConfig.equals("wrapfix.BQ.mixins.json")) {
+            return Loader.isModLoaded("betterquesting");
+        }
+        if(mixinConfig.equals("wrapfix.IW.mixins.json")) {
+            return Loader.isModLoaded("industrialwires");
+        }
+        if(mixinConfig.equals("wrapfix.Bot.mixins.json")) {
+            return Loader.isModLoaded("botania");
+        }
+        return false;
+    }
+
 }
 

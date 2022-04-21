@@ -24,7 +24,7 @@ apply plugin: 'org.spongepowered.mixin'
 def travisBuildNumber = System.getenv("TRAVIS_BUILD_NUMBER")
 def versionSuffix = travisBuildNumber != null ? travisBuildNumber : "SNAPSHOT"
 
-version "0.3"
+version "0.4"
 group "gkappa.wrapfix"
 archivesBaseName = "WrapFix"
 
@@ -115,6 +115,7 @@ dependencies {
     compileOnly fg.deobf( "curse.maven:MixinBooter-419286:3687785" )
     compileOnly fg.deobf( "curse.maven:BetterQuesting-238856:2950248" )
     compileOnly fg.deobf( "curse.maven:Botania-225643:3330934" )
+    compileOnly fg.deobf( "curse.maven:Psi-241665:3085917" )
     compileOnly fg.deobf( "curse.maven:Baubles-227083:2518667" )
     //compileOnly ("blus:immersiveengineering:0.12-98")
     //compileOnly ("mantle:industrialwires:1.8-38")

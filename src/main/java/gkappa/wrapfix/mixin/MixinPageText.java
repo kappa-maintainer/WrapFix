@@ -1,6 +1,7 @@
 package gkappa.wrapfix.mixin;
 
 import com.google.common.base.Joiner;
+import gkappa.wrapfix.StringSplitter;
 import gkappa.wrapfix.WrapFix;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -38,7 +39,7 @@ public class MixinPageText {
         for(String s : textEntries) {
             List<String> words = new ArrayList<>();
             String lineStr = "";
-            String[] tokens = Splitter(s);
+            String[] tokens = StringSplitter.Splitter(s);
 
             for(String token : tokens) {
                 String prev = lineStr;
@@ -62,7 +63,7 @@ public class MixinPageText {
         int i = 0;
         for(List<String> words : lines) {
             int xi = x;
-            int spacing = 4;
+            int spacing = 0;
             int wcount = words.size();
             int compensationSpaces = 0;
             boolean justify = ConfigHandler.lexiconJustifiedText && wcount > 0 && lines.size() > i && !lines.get(i + 1).isEmpty();
@@ -83,12 +84,7 @@ public class MixinPageText {
                     extra++;
                 }
                 font.drawString(s, xi, y, color);
-                if (s.length() == 3) {
-                    if (Character.UnicodeScript.of(s.charAt(2)) == Character.UnicodeScript.HAN) {
-                        spacing = 0;
-                        extra =0;
-                    }
-                }
+
                 xi += font.getStringWidth(s) + spacing + extra;
             }
 
@@ -109,31 +105,4 @@ public class MixinPageText {
         return null;
     }
 
-    private static String[] Splitter(String s) {
-        StringBuilder word = new StringBuilder();
-        List<String> result = new ArrayList<>();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if(c == ' ') {
-                word.append(c);
-                result.add(word.toString());
-                word = new StringBuilder();
-                continue;
-            }
-            if(Character.UnicodeScript.of(c) == Character.UnicodeScript.HAN) {
-                if (word.length() > 0) {
-                    result.add(word.toString());
-                    word = new StringBuilder();
-                }
-                word.append(c);
-                result.add(word.toString());
-                word = new StringBuilder();
-                continue;
-            }
-            word.append(c);
-
-        }
-
-        return  result.toArray(new String[0]);
-    }
 }

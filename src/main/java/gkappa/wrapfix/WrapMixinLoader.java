@@ -10,7 +10,7 @@ public class WrapMixinLoader implements ILateMixinLoader {
 
     @Override
     public List<String> getMixinConfigs() {
-        return Lists.newArrayList("wrapfix.BQ.mixins.json", "wrapfix.IW.mixins.json", "wrapfix.Bot.mixins.json");
+        return Lists.newArrayList("wrapfix.BQ.mixins.json", "wrapfix.IW.mixins.json", "wrapfix.Bot.mixins.json", "wrapfix.Psi.mixins.json");
     }
 
     @Override
@@ -23,6 +23,9 @@ public class WrapMixinLoader implements ILateMixinLoader {
         }
         if(mixinConfig.equals("wrapfix.Bot.mixins.json")) {
             return Loader.isModLoaded("botania");
+        }
+        if(mixinConfig.equals("wrapfix.Psi.mixins.json")) {
+            return Loader.isModLoaded("psi");
         }
         return false;
     }

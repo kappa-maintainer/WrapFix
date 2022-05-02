@@ -1,8 +1,7 @@
 package gkappa.wrapfix.mixin;
 
 import com.google.common.base.Joiner;
-import gkappa.wrapfix.StringSplitter;
-import gkappa.wrapfix.WrapFix;
+import gkappa.wrapfix.CJKTextHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.resources.I18n;
@@ -39,7 +38,7 @@ public class MixinPageText {
         for(String s : textEntries) {
             List<String> words = new ArrayList<>();
             String lineStr = "";
-            String[] tokens = StringSplitter.Splitter(s);
+            String[] tokens = CJKTextHelper.Splitter(s);
 
             for(String token : tokens) {
                 String prev = lineStr;

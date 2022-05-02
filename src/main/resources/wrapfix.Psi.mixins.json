@@ -2,7 +2,7 @@
 	"required": true,
 	"package": "gkappa.wrapfix.mixin",
 	"compatibilityLevel": "JAVA_8",
-	"refmap": "wrapfix.refmap.json",
+	"refmap": "mixins.wrapfix.refmap.json",
 	"target": "@env(DEFAULT)",
 	"client": [
 		"MixinTextHelper"

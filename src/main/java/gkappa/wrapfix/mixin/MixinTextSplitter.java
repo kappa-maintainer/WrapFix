@@ -1,5 +1,6 @@
 package gkappa.wrapfix.mixin;
 
+import gkappa.wrapfix.CJKTextHelper;
 import malte0811.industrialwires.client.manual.TextSplitter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +16,7 @@ public class MixinTextSplitter {
         if (Character.isWhitespace(start) ^ Character.isWhitespace(here)) {
             ret = 2;
         }
-        if (Character.UnicodeScript.of(here) == Character.UnicodeScript.HAN) {
+        if (CJKTextHelper.isCharCJK(here)) {
             ret = 2;
         }
         if (here == '<') {
@@ -27,6 +28,6 @@ public class MixinTextSplitter {
                 ret = (byte) (ret | 0x2);
             }
         }
-        callback.setReturnValue(Byte.valueOf(ret));
+        callback.setReturnValue(ret);
     }
 }

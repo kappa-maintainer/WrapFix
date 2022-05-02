@@ -1,6 +1,6 @@
 package gkappa.wrapfix.mixin;
 
-import gkappa.wrapfix.StringSplitter;
+import gkappa.wrapfix.CJKTextHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,13 +9,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import vazkii.psi.api.internal.TooltipHelper;
-import vazkii.psi.client.core.helper.TextHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-@Mixin(value = {TextHelper.class}, remap = false)
+@Mixin(value = {vazkii.psi.client.core.helper.TextHelper.class}, remap = false)
 public class MixinTextHelper {
 
     @Shadow
@@ -42,7 +41,7 @@ public class MixinTextHelper {
         for(String s : textEntries) {
             List<String> words = new ArrayList<>();
             String lineStr = "";
-            String[] tokens = StringSplitter.Splitter(s);
+            String[] tokens = CJKTextHelper.Splitter(s);
             for(String token : tokens) {
                 String prev = lineStr;
                 lineStr += token;

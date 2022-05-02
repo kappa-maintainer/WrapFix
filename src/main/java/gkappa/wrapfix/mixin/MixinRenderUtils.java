@@ -2,6 +2,7 @@ package gkappa.wrapfix.mixin;
 
 
 import betterquesting.api.utils.RenderUtils;
+import gkappa.wrapfix.CJKTextHelper;
 import gkappa.wrapfix.WrapFix;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,7 +32,7 @@ public abstract class MixinRenderUtils {
                     l = k;
 
                 default:
-                    if (Character.UnicodeScript.of(c0) == Character.UnicodeScript.HAN) {
+                    if (CJKTextHelper.isCharCJK(c0)) {
                         l = k;
                     }
                     j += font.getCharWidth(c0);

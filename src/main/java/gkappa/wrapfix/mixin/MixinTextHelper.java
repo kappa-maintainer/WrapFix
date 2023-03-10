@@ -65,7 +65,6 @@ public class MixinTextHelper {
 
         String lastLine = "";
         for(List<String> words : lines) {
-            int xi = x;
 
             StringBuilder lineStr = new StringBuilder();
             for(String s : words) {
@@ -73,8 +72,8 @@ public class MixinTextHelper {
                 int swidth = font.getStringWidth(s);
                 if(doit) {
                     if(centered)
-                        font.drawString(s, xi + width / 2 - swidth / 2, y, 0xFFFFFF);
-                    else font.drawString(s, xi, y, 0xFFFFFF);
+                        font.drawString(s, x + width / 2 - swidth / 2, y, 0xFFFFFF);
+                    else font.drawString(s, x, y, 0xFFFFFF);
                 }
                 lineStr.append(s);
             }

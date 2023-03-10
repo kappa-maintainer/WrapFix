@@ -1,34 +1,18 @@
 package gkappa.wrapfix;
 
+import com.ibm.icu.text.BreakIterator;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class CJKTextHelper {
     public static String[] Splitter(String s) {
-        StringBuilder word = new StringBuilder();
+        WrapFix.BREAK_ITERATOR.setText(s);
+        WrapFix.BREAK_ITERATOR.first();
         List<String> result = new ArrayList<>();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if(c == ' ') {
-                word.append(c);
-                result.add(word.toString());
-                word = new StringBuilder();
-                continue;
-            }
-            if(isCharCJK(c)) {
-                if (word.length() > 0) {
-                    result.add(word.toString());
-                    word = new StringBuilder();
-                }
-                word.append(c);
-                result.add(word.toString());
-                word = new StringBuilder();
-                continue;
-            }
-            word.append(c);
-
+        while (WrapFix.BREAK_ITERATOR.current() != BreakIterator.DONE) {
+            result.add(s.substring(WrapFix.BREAK_ITERATOR.current(), WrapFix.BREAK_ITERATOR.next()));
         }
-        result.add(word.toString());
         return  result.toArray(new String[0]);
     }
 

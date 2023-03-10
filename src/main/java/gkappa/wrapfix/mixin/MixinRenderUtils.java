@@ -16,10 +16,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinRenderUtils {
     @Inject(at = {@At("HEAD")}, method = {"sizeStringToWidth"}, cancellable = true, remap = false)
     private static void sizeStringToWidth(String str, int wrapWidth, FontRenderer font, CallbackInfoReturnable<Integer> callback) {
+        WrapFix.BREAK_ITERATOR.setText(str);
         int i = str.length();
         int j = 0;
         int k = 0;
-        int l = -1;
         for (boolean flag = false; k < i; k++) {
 
             char c0 = str.charAt(k);
@@ -28,13 +28,8 @@ public abstract class MixinRenderUtils {
                 case '\n':
                     k--;
                     break;
-                case ' ':
-                    l = k;
-
                 default:
-                    if (CJKTextHelper.isCharCJK(c0)) {
-                        l = k;
-                    }
+
                     j += font.getCharWidth(c0);
                     if (flag) {
                         j++;
@@ -58,15 +53,15 @@ public abstract class MixinRenderUtils {
                     break;
             }
             if (c0 == '\n') {
-                l = ++k;
                 break;
             }
             if (j > wrapWidth) {
                 break;
             }
         }
-        int temp = (k != i && l > 0 && l < k) ? l : k;
-        callback.setReturnValue(Integer.valueOf(temp));
+        WrapFix.BREAK_ITERATOR.following(k);
+        int temp = WrapFix.BREAK_ITERATOR.previous();
+        callback.setReturnValue(temp < 0 ? k : temp);
     }
 
     @Shadow(remap = false)

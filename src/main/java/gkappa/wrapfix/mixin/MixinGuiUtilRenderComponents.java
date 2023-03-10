@@ -2,7 +2,7 @@ package gkappa.wrapfix.mixin;
 
 
 import com.google.common.collect.Lists;
-import gkappa.wrapfix.CJKTextHelper;
+import gkappa.wrapfix.WrapFix;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiUtilRenderComponents;
 import net.minecraft.util.text.ITextComponent;
@@ -19,78 +19,82 @@ import static net.minecraft.client.gui.GuiUtilRenderComponents.removeTextColorsI
 @Mixin({GuiUtilRenderComponents.class})
 public class MixinGuiUtilRenderComponents {
     @Inject(at = @At("HEAD"), method = "splitText", cancellable = true)
-    private static void modifySplitText(ITextComponent textComponent, int maxTextLenght, FontRenderer fontRendererIn, boolean p_178908_3_, boolean forceTextColor, CallbackInfoReturnable<List<ITextComponent>> cir) {
+    private static void modifySplitText(ITextComponent textComponent, int maxTextLenght, FontRenderer fontRendererIn, boolean notPreserveSpace, boolean forceTextColor, CallbackInfoReturnable<List<ITextComponent>> cir) {
         int i = 0;
         ITextComponent itextcomponent = new TextComponentString("");
-        List<ITextComponent> list = Lists.<ITextComponent>newArrayList();
-        List<ITextComponent> list1 = Lists.newArrayList(textComponent);
+        List<ITextComponent> result = Lists.newArrayList();
+        List<ITextComponent> sourceList = Lists.newArrayList(textComponent);
 
-        for (int j = 0; j < list1.size(); ++j)
+        for (int j = 0; j < sourceList.size(); ++j)
         {
-            ITextComponent itextcomponent1 = list1.get(j);
-            String s = itextcomponent1.getUnformattedComponentText();
+            ITextComponent currentComponent = sourceList.get(j);
+            String s = currentComponent.getUnformattedComponentText();
             boolean flag = false;
 
             if (s.contains("\n"))
             {
-                int k = s.indexOf(10);
+                int k = s.indexOf('\n');
                 String s1 = s.substring(k + 1);
                 s = s.substring(0, k + 1);
-                ITextComponent itextcomponent2 = new TextComponentString(s1);
-                itextcomponent2.setStyle(itextcomponent1.getStyle().createShallowCopy());
-                list1.add(j + 1, itextcomponent2);
+                ITextComponent afterNewLine = new TextComponentString(s1);
+                afterNewLine.setStyle(currentComponent.getStyle().createShallowCopy());
+                sourceList.add(j + 1, afterNewLine);
                 flag = true;
             }
 
-            String s4 = removeTextColorsIfConfigured(itextcomponent1.getStyle().getFormattingCode() + s, forceTextColor);
-            String s5 = s4.endsWith("\n") ? s4.substring(0, s4.length() - 1) : s4;
-            int i1 = fontRendererIn.getStringWidth(s5);
-            TextComponentString textcomponentstring = new TextComponentString(s5);
-            textcomponentstring.setStyle(itextcomponent1.getStyle().createShallowCopy());
+            String formattedString = removeTextColorsIfConfigured(currentComponent.getStyle().getFormattingCode() + s, forceTextColor);
+            String formattedNoBreakString = formattedString.endsWith("\n") ? formattedString.substring(0, formattedString.length() - 1) : formattedString;
+            int currentCLenght = fontRendererIn.getStringWidth(formattedNoBreakString);
+            TextComponentString formattedComponent = new TextComponentString(formattedNoBreakString);
+            formattedComponent.setStyle(currentComponent.getStyle().createShallowCopy());
 
-            if (i + i1 > maxTextLenght)
+            WrapFix.BREAK_ITERATOR.setText(formattedString);
+
+            if (i + currentCLenght > maxTextLenght)
             {
-                String s2 = fontRendererIn.trimStringToWidth(s4, maxTextLenght - i, false);
-                String s3 = s2.length() < s4.length() ? s4.substring(s2.length()) : null;
+                String wrappedString = fontRendererIn.trimStringToWidth(formattedString, maxTextLenght - i, false);
+                String remainString = wrappedString.length() < formattedString.length() ? formattedString.substring(wrappedString.length()) : null;
 
-                if (s3 != null && !s3.isEmpty())
+                if (remainString != null) // Handle remain part
                 {
-                    int l = lastindex(s2);
+                    WrapFix.BREAK_ITERATOR.following(wrappedString.length());
 
-                    if (l >= 0 && fontRendererIn.getStringWidth(s4.substring(0, l)) > 0)
+                    int l = WrapFix.BREAK_ITERATOR.previous();
+
+                    if (l >= 0 && fontRendererIn.getStringWidth(formattedString.substring(0, l)) > 0)
                     {
-                        s2 = s4.substring(0, l);
+                        wrappedString = formattedString.substring(0, l);
 
-                        if (p_178908_3_ && s4.charAt(0) == ' ')
+                        if (notPreserveSpace && formattedString.charAt(0) == ' ')
                         {
                             ++l;
                         }
 
-                        s3 = s4.substring(l);
+                        remainString = formattedString.substring(l);
                     }
-                    else if (i > 0 && !s4.contains(" "))
+                    else if (i > 0 && !formattedString.contains(" "))
                     {
-                        s2 = "";
-                        s3 = s4;
+                        wrappedString = "";
+                        remainString = formattedString;
                     }
 
-                    s3 = FontRenderer.getFormatFromString(s2) + s3; //Forge: Fix chat formatting not surviving line wrapping.
+                    remainString = FontRenderer.getFormatFromString(wrappedString) + remainString; //Forge: Fix chat formatting not surviving line wrapping.
 
-                    TextComponentString textcomponentstring1 = new TextComponentString(s3);
-                    textcomponentstring1.setStyle(itextcomponent1.getStyle().createShallowCopy());
-                    list1.add(j + 1, textcomponentstring1);
+                    TextComponentString finalString = new TextComponentString(remainString);
+                    finalString.setStyle(currentComponent.getStyle().createShallowCopy());
+                    sourceList.add(j + 1, finalString);
                 }
 
-                i1 = fontRendererIn.getStringWidth(s2);
-                textcomponentstring = new TextComponentString(s2);
-                textcomponentstring.setStyle(itextcomponent1.getStyle().createShallowCopy());
+                currentCLenght = fontRendererIn.getStringWidth(wrappedString);
+                formattedComponent = new TextComponentString(wrappedString);
+                formattedComponent.setStyle(currentComponent.getStyle().createShallowCopy());
                 flag = true;
             }
 
-            if (i + i1 <= maxTextLenght)
+            if (i + currentCLenght <= maxTextLenght)
             {
-                i += i1;
-                itextcomponent.appendSibling(textcomponentstring);
+                i += currentCLenght;
+                itextcomponent.appendSibling(formattedComponent);
             }
             else
             {
@@ -99,25 +103,14 @@ public class MixinGuiUtilRenderComponents {
 
             if (flag)
             {
-                list.add(itextcomponent);
+                result.add(itextcomponent);
                 i = 0;
                 itextcomponent = new TextComponentString("");
             }
         }
 
-        list.add(itextcomponent);
-        cir.setReturnValue(list);
+        result.add(itextcomponent);
+        cir.setReturnValue(result);
     }
 
-    private static int lastindex(String str) {
-        int i = -1;
-        int ci = -1;
-        for(char c : str.toCharArray()) {
-            ci++;
-            if(CJKTextHelper.isCharCJK(c) || c == ' ') {
-                i = ci;
-            }
-        }
-        return i == ci ? -1 : i+1;
-    }
 }

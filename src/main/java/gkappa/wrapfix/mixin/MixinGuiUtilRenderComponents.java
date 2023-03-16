@@ -22,14 +22,13 @@ public class MixinGuiUtilRenderComponents {
     private static void modifySplitText(ITextComponent textComponent, int maxTextLenght, FontRenderer fontRendererIn, boolean notPreserveSpace, boolean forceTextColor, CallbackInfoReturnable<List<ITextComponent>> cir) {
         int i = 0;
         ITextComponent itextcomponent = new TextComponentString("");
-        List<ITextComponent> result = Lists.newArrayList();
+        List<ITextComponent> resultList = Lists.newArrayList();
         List<ITextComponent> sourceList = Lists.newArrayList(textComponent);
 
         for (int j = 0; j < sourceList.size(); ++j)
         {
-            ITextComponent currentComponent = sourceList.get(j);
-            String s = currentComponent.getUnformattedComponentText();
-            boolean flag = false;
+            ITextComponent current = sourceList.get(j);
+            String s = current.getUnformattedComponentText();
 
             if (s.contains("\n"))
             {
@@ -37,80 +36,27 @@ public class MixinGuiUtilRenderComponents {
                 String s1 = s.substring(k + 1);
                 s = s.substring(0, k + 1);
                 ITextComponent afterNewLine = new TextComponentString(s1);
-                afterNewLine.setStyle(currentComponent.getStyle().createShallowCopy());
+                afterNewLine.setStyle(current.getStyle().createShallowCopy());
                 sourceList.add(j + 1, afterNewLine);
-                flag = true;
             }
 
-            String formattedString = removeTextColorsIfConfigured(currentComponent.getStyle().getFormattingCode() + s, forceTextColor);
-            String formattedNoBreakString = formattedString.endsWith("\n") ? formattedString.substring(0, formattedString.length() - 1) : formattedString;
-            int currentCLenght = fontRendererIn.getStringWidth(formattedNoBreakString);
+            String formattedCurrentStr = removeTextColorsIfConfigured(current.getStyle().getFormattingCode() + s, forceTextColor);
+            String formattedNoBreakString = formattedCurrentStr.endsWith("\n") ? formattedCurrentStr.substring(0, formattedCurrentStr.length() - 1) : formattedCurrentStr;
+            int currentWidth = fontRendererIn.getStringWidth(formattedNoBreakString);
             TextComponentString formattedComponent = new TextComponentString(formattedNoBreakString);
-            formattedComponent.setStyle(currentComponent.getStyle().createShallowCopy());
+            formattedComponent.setStyle(current.getStyle().createShallowCopy());
 
-            WrapFix.BREAK_ITERATOR.setText(formattedString);
-
-            if (i + currentCLenght > maxTextLenght)
+            if (currentWidth > maxTextLenght)
             {
-                String wrappedString = fontRendererIn.trimStringToWidth(formattedString, maxTextLenght - i, false);
-                String remainString = wrappedString.length() < formattedString.length() ? formattedString.substring(wrappedString.length()) : null;
-
-                if (remainString != null) // Handle remain part
-                {
-                    WrapFix.BREAK_ITERATOR.following(wrappedString.length());
-
-                    int l = WrapFix.BREAK_ITERATOR.previous();
-
-                    if (l >= 0 && fontRendererIn.getStringWidth(formattedString.substring(0, l)) > 0)
-                    {
-                        wrappedString = formattedString.substring(0, l);
-
-                        if (notPreserveSpace && formattedString.charAt(0) == ' ')
-                        {
-                            ++l;
-                        }
-
-                        remainString = formattedString.substring(l);
-                    }
-                    else if (i > 0 && !formattedString.contains(" "))
-                    {
-                        wrappedString = "";
-                        remainString = formattedString;
-                    }
-
-                    remainString = FontRenderer.getFormatFromString(wrappedString) + remainString; //Forge: Fix chat formatting not surviving line wrapping.
-
-                    TextComponentString finalString = new TextComponentString(remainString);
-                    finalString.setStyle(currentComponent.getStyle().createShallowCopy());
-                    sourceList.add(j + 1, finalString);
+                for (String str : fontRendererIn.listFormattedStringToWidth(formattedCurrentStr, maxTextLenght)) {
+                    resultList.add(new TextComponentString(str).setStyle(current.getStyle().createShallowCopy()));
                 }
-
-                currentCLenght = fontRendererIn.getStringWidth(wrappedString);
-                formattedComponent = new TextComponentString(wrappedString);
-                formattedComponent.setStyle(currentComponent.getStyle().createShallowCopy());
-                flag = true;
-            }
-
-            if (i + currentCLenght <= maxTextLenght)
-            {
-                i += currentCLenght;
-                itextcomponent.appendSibling(formattedComponent);
-            }
-            else
-            {
-                flag = true;
-            }
-
-            if (flag)
-            {
-                result.add(itextcomponent);
-                i = 0;
-                itextcomponent = new TextComponentString("");
+            } else {
+                resultList.add(new TextComponentString(formattedCurrentStr).setStyle(current.getStyle().createShallowCopy()));
             }
         }
 
-        result.add(itextcomponent);
-        cir.setReturnValue(result);
+        cir.setReturnValue(resultList);
     }
 
 }

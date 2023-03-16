@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -41,6 +42,11 @@ public abstract class MixinFontRenderer {
     }
     @Inject(at = @At("HEAD"), method = "listFormattedStringToWidth", cancellable = true)
     private void wrapStringToWidthICU4J(String str, int wrapWidth, CallbackInfoReturnable<List<String>> callback) {        // They don't render and should not be feed into iterator
+        WrapFix.logger.info(str);
+        if (str.length() == 0){
+            callback.setReturnValue(Collections.singletonList(""));
+            return;
+        }
         String cleanStr = str.replaceAll("§.", "").replaceAll("§", "");
         WrapFix.BREAK_ITERATOR.setText(cleanStr);
         List<String> list = new ArrayList<>();

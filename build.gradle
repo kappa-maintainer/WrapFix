@@ -164,17 +164,24 @@ processResources {
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
+  repositories {
+    maven {
+      name = "outlands"
+      url = "https://maven.outlands.top/releases"
+      credentials(PasswordCredentials)
+      authentication {
+        basic(BasicAuthentication)
+      }
     }
-    repositories {
-        maven {
-            url "file:///${project.projectDir}/mcmodsrepo"
-        }
-
+  }
+  publications {
+    maven(MavenPublication) {
+      groupId = "gkappa"
+      artifactId = "wrapfix"
+      version = "1.0.2-beta"
+      from components.java
     }
+  }
 }
 
 mixin {

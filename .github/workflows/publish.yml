@@ -1,0 +1,26 @@
+# TODO: https://github.blog/changelog/2022-08-09-github-actions-the-ubuntu-18-04-actions-runner-image-is-being-deprecated-and-will-be-removed-by-12-1-22/
+name: LWJGL Publish
+
+on: [workflow_dispatch]
+
+jobs:
+  linux:
+    name: Publish
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ARCH: [x64]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+        name: Install JDK 8
+      - name: Try publish
+        run: |
+          chmod +x ./gradlew
+          ./gradlew -PoutlandsUsername=${{ secrets.OUTLANDS_USER }} -PoutlandsPassword="${{ secrets.OUTLANDS_PWD }}" build publish

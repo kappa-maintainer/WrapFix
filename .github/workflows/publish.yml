@@ -1,5 +1,5 @@
 # TODO: https://github.blog/changelog/2022-08-09-github-actions-the-ubuntu-18-04-actions-runner-image-is-being-deprecated-and-will-be-removed-by-12-1-22/
-name: LWJGL Publish
+name: Wrapfix Publish
 
 on: [workflow_dispatch]
 

@@ -42,7 +42,7 @@ public abstract class MixinFontRenderer {
     }
     @Inject(at = @At("HEAD"), method = "listFormattedStringToWidth", cancellable = true)
     private void wrapStringToWidthICU4J(String str, int wrapWidth, CallbackInfoReturnable<List<String>> callback) {        // They don't render and should not be feed into iterator
-        WrapFix.logger.info(str);
+
         if (str.length() == 0){
             callback.setReturnValue(Collections.singletonList(""));
             return;

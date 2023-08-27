@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 public class WrapFix {
     public static final String MODID = "wrapfix";
     public static final String NAME = "WrapFix";
-    public static final String VERSION = "1.0.4-beta";
+    public static final String VERSION = "1.0.5-beta";
 
     public static final BreakIterator BREAK_ITERATOR = BreakIterator.getLineInstance();
     public static Logger logger;

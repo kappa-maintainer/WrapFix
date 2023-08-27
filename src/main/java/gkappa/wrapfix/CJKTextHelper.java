@@ -10,8 +10,14 @@ public class CJKTextHelper {
         WrapFix.BREAK_ITERATOR.setText(s);
         WrapFix.BREAK_ITERATOR.first();
         List<String> result = new ArrayList<>();
+        int next, current;
         while (WrapFix.BREAK_ITERATOR.current() != BreakIterator.DONE) {
-            result.add(s.substring(WrapFix.BREAK_ITERATOR.current(), WrapFix.BREAK_ITERATOR.next()));
+            current = WrapFix.BREAK_ITERATOR.current();
+            next = WrapFix.BREAK_ITERATOR.next();
+            if (next > 0)
+                result.add(s.substring(current, next));
+            else
+                break;
         }
         return  result.toArray(new String[0]);
     }

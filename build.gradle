@@ -22,7 +22,7 @@ apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: 'org.spongepowered.mixin'
 
 
-version "1.0.4-beta"
+version "1.0.5-beta"
 group "gkappa.wrapfix"
 archivesBaseName = "WrapFix"
 
@@ -112,10 +112,10 @@ dependencies {
         exclude module: "gson"
         exclude module: "commons-io"
     }*/
-    compileJar "com.ibm.icu:icu4j:72.1"
+    compileJar "com.ibm.icu:icu4j:73.2"
 
     runtimeOnly "zone.rong:mixinbooter:7.0"
-    compileOnly fg.deobf("zone.rong:mixinbooter:7.0")
+    compileOnly fg.deobf("zone.rong:mixinbooter:8.4")
 
     compileOnly fg.deobf( "curse.maven:IndustrialWiresRE-521139:3474268" )
     compileOnly fg.deobf( "curse.maven:ImmersiveEngineering-231951:2974106" )

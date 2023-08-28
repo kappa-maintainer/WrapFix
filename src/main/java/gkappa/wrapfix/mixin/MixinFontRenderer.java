@@ -1,5 +1,6 @@
 package gkappa.wrapfix.mixin;
 
+import gkappa.wrapfix.Reset;
 import gkappa.wrapfix.WrapFix;
 import net.minecraft.client.gui.FontRenderer;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,32 +19,11 @@ import java.util.Stack;
 @Mixin({FontRenderer.class})
 public abstract class MixinFontRenderer {
 
-    private static class Reset extends Pair<Integer, Integer> {
-        int i;
-        int ri;
-        Reset(int i, int ri) {
-            this.i = i; //reset(§r) index in str
-            this.ri = ri; //reset(§r) index in format
-        }
-        @Override
-        public Integer getLeft() {
-            return i;
-        }
 
-        @Override
-        public Integer getRight() {
-            return ri;
-        }
-
-        @Override
-        public Integer setValue(Integer integer) {
-            return null;
-        }
-    }
     @Inject(at = @At("HEAD"), method = "listFormattedStringToWidth", cancellable = true)
     private void wrapStringToWidthICU4J(String str, int wrapWidth, CallbackInfoReturnable<List<String>> callback) {        // They don't render and should not be feed into iterator
 
-        if (str.length() == 0){
+        if (str.isEmpty()){
             callback.setReturnValue(Collections.singletonList(""));
             return;
         }

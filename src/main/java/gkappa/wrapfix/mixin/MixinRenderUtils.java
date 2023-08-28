@@ -28,14 +28,6 @@ public abstract class MixinRenderUtils {
                 case '\n':
                     k--;
                     break;
-                default:
-
-                    j += font.getCharWidth(c0);
-                    if (flag) {
-                        j++;
-                    }
-                    break;
-
 
                 case '§':
                     if (k < i - 1) {
@@ -45,23 +37,31 @@ public abstract class MixinRenderUtils {
                             if (c1 == 'r' || c1 == 'R' || isFormatColor(c1)) {
                                 flag = false;
                             }
-
                             break;
                         }
                         flag = true;
                     }
                     break;
+
+                default:
+                    j += font.getCharWidth(c0);
+                    if (flag) {
+                        j++;
+                    }
+                    break;
+
             }
             if (c0 == '\n') {
+                k++;
                 break;
             }
             if (j > wrapWidth) {
                 break;
             }
         }
-        WrapFix.BREAK_ITERATOR.following(k);
-        int temp = WrapFix.BREAK_ITERATOR.previous();
-        callback.setReturnValue(temp < 0 ? k : temp);
+
+        int temp = WrapFix.BREAK_ITERATOR.preceding(k);
+        callback.setReturnValue(temp == 0 ? k : temp);
     }
 
     @Shadow(remap = false)

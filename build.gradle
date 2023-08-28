@@ -114,12 +114,13 @@ dependencies {
     }*/
     compileJar "com.ibm.icu:icu4j:73.2"
 
-    runtimeOnly "zone.rong:mixinbooter:7.0"
-    compileOnly fg.deobf("zone.rong:mixinbooter:8.4")
+    runtimeOnly "zone.rong:mixinbooter:8.4"
+    compileOnly "zone.rong:mixinbooter:8.4"
 
     compileOnly fg.deobf( "curse.maven:IndustrialWiresRE-521139:3474268" )
     compileOnly fg.deobf( "curse.maven:ImmersiveEngineering-231951:2974106" )
-    compileOnly fg.deobf( "curse.maven:BetterQuesting-238856:2950248" )
+    compileOnly fg.deobf( "curse.maven:BetterQuesting-629629:4010084" )
+    runtimeOnly "curse.maven:BetterQuesting-629629:4010084"
     compileOnly fg.deobf( "curse.maven:Botania-225643:3330934" )
     compileOnly fg.deobf( "curse.maven:Psi-241665:3085917" )
     compileOnly fg.deobf( "curse.maven:Baubles-227083:2518667" )

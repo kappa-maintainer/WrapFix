@@ -22,7 +22,7 @@ apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: 'org.spongepowered.mixin'
 
 
-version "1.0.5-beta"
+version "1.0.7-beta"
 group "gkappa.wrapfix"
 archivesBaseName = "WrapFix"
 

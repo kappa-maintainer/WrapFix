@@ -61,7 +61,7 @@ public abstract class MixinRenderUtils {
         }
 
         int temp = WrapFix.BREAK_ITERATOR.preceding(k);
-        callback.setReturnValue(temp == 0 ? k : temp);
+        callback.setReturnValue(temp <= 0 ? k : temp);
     }
 
     @Shadow(remap = false)

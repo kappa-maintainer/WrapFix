@@ -3,14 +3,14 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 buildscript {
     repositories {
         maven { url 'https://maven.minecraftforge.net' }
-        maven { url "https://plugins.gradle.org/m2/" }
         maven { url "https://repo.spongepowered.org/repository/maven-public" }
         mavenCentral()
+        gradlePluginPortal()
     }
     dependencies {
-        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
-        classpath 'net.minecraftforge.gradle:ForgeGradle:5.1.+'
-        classpath "org.spongepowered:mixingradle:0.7-SNAPSHOT"
+        classpath "com.github.johnrengelman:shadow:8.1.1"
+        classpath 'net.minecraftforge.gradle:ForgeGradle:6.0.+'
+        classpath "org.spongepowered:mixingradle:0.7.+"
     }
 }
 
@@ -22,7 +22,7 @@ apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: 'org.spongepowered.mixin'
 
 
-version "1.0.7-beta"
+version "1.2.0-beta"
 group "gkappa.wrapfix"
 archivesBaseName = "WrapFix"
 
@@ -71,9 +71,9 @@ minecraft {
 }
 
 configurations {
-    compileJar {
-        implementation.extendsFrom(compileJar)
-    }
+    shade
+    shade.extendsFrom implementation
+
 }
 
 repositories {
@@ -100,8 +100,7 @@ dependencies {
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
-
-    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
+    
     /*
     compileJar("org.spongepowered:mixin:0.8.5") {
         exclude module: "asm-commons"
@@ -112,10 +111,20 @@ dependencies {
         exclude module: "gson"
         exclude module: "commons-io"
     }*/
-    compileJar "com.ibm.icu:icu4j:73.2"
+    shade "com.ibm.icu:icu4j:74.2"
 
-    runtimeOnly "zone.rong:mixinbooter:8.4"
-    compileOnly "zone.rong:mixinbooter:8.4"
+    // Common:
+    annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
+    annotationProcessor 'com.google.guava:guava:32.1.2-jre'
+    annotationProcessor 'com.google.code.gson:gson:2.8.9'
+
+    // ForgeGradle:
+    implementation ('zone.rong:mixinbooter:8.9') {
+        transitive = false
+    }
+    annotationProcessor ('zone.rong:mixinbooter:8.9') {
+        transitive = false
+    }
 
     compileOnly fg.deobf( "curse.maven:IndustrialWiresRE-521139:3474268" )
     compileOnly fg.deobf( "curse.maven:ImmersiveEngineering-231951:2974106" )
@@ -144,11 +153,9 @@ jar {
                 "ForceLoadAsMod": "true"
         ])
     }
+    //finalizedBy('reobfJar')
 }
 
-// Example configuration to allow publishing using the maven-publish task
-// This is the preferred method to reobfuscate your jar file
-jar.finalizedBy('reobfJar')
 // However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
 //publish.dependsOn('reobfJar')
 
@@ -156,13 +163,6 @@ java {
     withSourcesJar()
 }
 
-processResources {
-    duplicatesStrategy(DuplicatesStrategy.INCLUDE)
-    from (sourceSets.main.resources.srcDirs) {
-        include("mcmod.info")
-        expand("version": version)
-    }
-}
 
 publishing {
   repositories {
@@ -179,7 +179,7 @@ publishing {
     maven(MavenPublication) {
       groupId = "gkappa"
       artifactId = "wrapfix"
-      version = "1.0.2-beta"
+      version = version
       from components.java
     }
   }
@@ -192,33 +192,24 @@ mixin {
 
 shadowJar {
     archiveClassifier.set(null)
-    configurations = [project.configurations.compileJar]
-    relocate('com.ibm.icu','new.com.ibm.icu')
-}
-
-task thinShadowJar(type: ShadowJar) {
-    archiveClassifier.set("thin")
-    configurations = [project.configurations.compileJar]
-    relocators = shadowJar.relocators
-
+    configurations = [project.configurations.shade]
+    relocate('com.ibm.icu','repack.com.ibm.icu')
     dependencies {
-        exclude(dependency("org.spongepowered:mixin"))
+        include(dependency("com.ibm.icu:icu4j:74.2"))
     }
-
     manifest {
         inheritFrom jar.manifest
     }
+    finalizedBy('reobfShadowJar')
+}
 
-    from sourceSets.main.output
+assemble.dependsOn shadowJar
+tasks.shadowJar.dependsOn("reobfJar")
+reobf {
+    shadowJar {}
 }
 
 artifacts {
     archives shadowJar
     archives sourcesJar
-    archives thinShadowJar
-}
-
-reobf {
-    shadowJar {}
-    thinShadowJar {}
 }

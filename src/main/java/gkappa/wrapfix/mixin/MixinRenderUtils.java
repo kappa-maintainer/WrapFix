@@ -2,8 +2,6 @@ package gkappa.wrapfix.mixin;
 
 
 import betterquesting.api.utils.RenderUtils;
-import gkappa.wrapfix.CJKTextHelper;
-import gkappa.wrapfix.Reset;
 import gkappa.wrapfix.WrapFix;
 import net.minecraft.client.gui.FontRenderer;
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Stack;
 
 
 @Mixin({RenderUtils.class})

@@ -57,14 +57,11 @@ public class MixinGuiUtilRenderComponents {
         ITextComponent lineToAdd = new TextComponentString("");
         String cleanedLine;
         Style style;
-        boolean newLined;
         for (j = 0; j < cache.size(); j++) {
             cleanedLine = cache.get(j);
             style = styleCache.get(j);
-            newLined = newLineCache.get(j);
-            wrapped = newLined;
+            wrapped = newLineCache.get(j);
             int lineWidth = fontRenderer.getStringWidth(cleanedLine);
-            //if (newLined) cleanedLine += "\n";
             TextComponentString line = new TextComponentString(cleanedLine);
             line.setStyle(style.createShallowCopy());
 
@@ -112,7 +109,7 @@ public class MixinGuiUtilRenderComponents {
             {
                 accumlateWidth += lineWidth;
                 lineToAdd.appendSibling(line);
-                fed += line.getText().length();// - (newLined ? 1: 0);
+                fed += line.getText().length();
             }
             else
             {

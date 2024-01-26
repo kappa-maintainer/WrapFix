@@ -57,8 +57,7 @@ public abstract class MixinFontRenderer {
                 case '\n':
                     list.add(line.toString());
                     fed += line.length() + 1;
-                    line.delete(0, line.length());
-                    line.append(format);
+                    line.delete(0, line.length()).append(format);
                     lineWidth = 0;
                     map.put(i, Pair.of(lineWidth, format.toString()));
                     continue;
@@ -108,18 +107,14 @@ public abstract class MixinFontRenderer {
                 if (icui <= fed) {
                     list.add(line.substring(0,line.length() - 1));
                     fed += line.length() - 1;
-                    line.delete(0, line.length());
-                    line.append(format);
-                    line.append(current);
+                    line.delete(0, line.length()).append(format).append(current);
                     lineWidth = getCharWidth(current);
                 } else {
                     d = icui - fed;
                     list.add(line.substring(0, d));
                     temp = line.substring(d);
                     fed += d;
-                    line.delete(0, line.length());
-                    line.append(map.get(icui).getRight());
-                    line.append(temp);
+                    line.delete(0, line.length()).append(map.get(icui).getRight()).append(temp);
                     lineWidth = lineWidth - map.get(icui - 1).getLeft();
                 }
             }

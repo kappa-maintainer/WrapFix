@@ -6,6 +6,7 @@ import gkappa.wrapfix.CJKTextHelper;
 import gkappa.wrapfix.Reset;
 import gkappa.wrapfix.WrapFix;
 import net.minecraft.client.gui.FontRenderer;
+import org.apache.commons.lang3.tuple.Pair;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
@@ -26,89 +28,85 @@ public abstract class MixinRenderUtils {
             callback.setReturnValue(Collections.singletonList(""));
             return;
         }
-        String cleanStr = str.replaceAll("§.", "").replaceAll("§", "");
-        WrapFix.BREAK_ITERATOR.setText(cleanStr);
+        WrapFix.BREAK_ITERATOR.setText(str);
         List<String> list = new ArrayList<>();
-        String format = ""; // For last line's format since it should use format of previous line
-        StringBuilder nextFormat = new StringBuilder();
-        int i = 0, j = 0, k, l;
-        Stack<Reset> lastReset = new Stack<>();
-        lastReset.push(new Reset(0, 0));
-        int strWidth = 0;
-        int prevBreak = 0;
+        int lineWidth = 0, fed = 0, icui, d;
+        StringBuilder format = new StringBuilder(); // For next line's format since it should use format of previous line
+        HashMap<Integer, Pair<Integer, String>> map = new HashMap<>();
+        StringBuilder line = new StringBuilder();
+        String temp;
+        char[] chars = str.toCharArray();
+        char f;
         boolean bold = false;
-        char c, f, back;
-        int prevCandidate;
-        do {
-            switch (c = str.charAt(i)) {
+        for (int i = 0; i < chars.length; i++) {
+            char current = chars[i];
+            switch (current) {
                 case '\n':
-                    list.add(nextFormat.substring(lastReset.peek().getRight()) + str.substring(prevBreak, i));
-                    format = nextFormat.toString();
-                    prevBreak = i + 1;
-                    strWidth = 0;
-                    break;
-                case '§': // format start
-                    if (i + 1 < str.length()) { // Prevent out of bound
-                        f = str.charAt(++i);
-                        nextFormat.append('§').append(f); // Add to current format code
+                    list.add(line.toString());
+                    fed += line.length() + 1;
+                    line.delete(0, line.length()).append(format);
+                    lineWidth = 0;
+                    map.put(i, Pair.of(lineWidth, format.toString()));
+                    continue;
+                case '§':
+                    if (i + 1 < chars.length) { // Prevent out of bound
+                        f = chars[i + 1];
                         if (f != 'l' && f != 'L') { // Check start of bold style
                             if (f == 'r' || f == 'R' || isFormatColor(f)) { // Not Bold, check end of style
                                 bold = false;
-                                lastReset.push(new Reset(i - 1, nextFormat.length())); // push reset location in str and format to stack
+                                if (f == 'r' || f == 'R') {
+                                    format.delete(0, format.length()); // Clear the format
+                                } else {
+                                    format.append('§').append(f); // Add to current format code
+                                }
+                                line.append('§').append(f);
+                                map.put(i, Pair.of(lineWidth, format.toString()));
+                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                continue;
+                            }
+                            if (f >= 'k' && f <= 'o' || f >= 'K' && f <= 'O') {
+                                format.append('§').append(f); // Add to current format code
+                                line.append('§').append(f);
+                                map.put(i, Pair.of(lineWidth, format.toString()));
+                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                continue;
                             }
                         } else {
                             bold = true;
+                            format.append('§').append(f); // Add to current format code
+                            line.append('§').append(f);
+                            map.put(i, Pair.of(lineWidth, format.toString()));
+                            map.put(++i, Pair.of(lineWidth, format.toString()));
+                            continue;
                         }
                     }
-                    break;
-
                 default:
-                    strWidth += font.getCharWidth(c);
+                    line.append(current);
+                    lineWidth += font.getCharWidth(current);
                     if (bold) {
-                        // Bold style is fat
-                        strWidth += 1;
+                        lineWidth++; // Bold style is one pixel wider
                     }
                     break;
-
             }
-            if (strWidth > wrapWidth) {
-                WrapFix.BREAK_ITERATOR.following(j); // The legal break right after j
-                prevCandidate = WrapFix.BREAK_ITERATOR.previous(); // Find the nearest legit break
-                k = i;
-                l = j;
-                if (prevCandidate > -1) {
-                    while (l > prevCandidate && k > 0) { // Backward searching to get actual format at break
-                        k--;
-                        l--;
-                        back = str.charAt(k);
-                        if (back == '§') {
-                            if (k == lastReset.peek().getLeft()) {
-                                lastReset.pop(); // Remove reset
-                            }
-                            nextFormat.delete(nextFormat.length() - 2, nextFormat.length()); // Remove format
-                            l++;
-                        }
-                    }
+            map.put(i, Pair.of(lineWidth, format.toString()));
+            if (lineWidth > wrapWidth) {
+                icui = WrapFix.BREAK_ITERATOR.preceding(i);
+                if (icui <= fed) {
+                    list.add(line.substring(0,line.length() - 1));
+                    fed += line.length() - 1;
+                    line.delete(0, line.length()).append(format).append(current);
+                    lineWidth = font.getCharWidth(current);
+                } else {
+                    d = icui - fed;
+                    list.add(line.substring(0, d));
+                    temp = line.substring(d);
+                    fed += d;
+                    line.delete(0, line.length()).append(map.get(icui).getRight()).append(temp);
+                    lineWidth = lineWidth - map.get(icui - 1).getLeft();
                 }
-                if (k <= prevBreak) {
-                    k = i; // Break in previous line, not usable, set it to current i
-                }
-                if (str.charAt(k - 1) == '§') {
-                    k--; // Make sure not to break in format code. Can't figure out how to put it in while(), so
-                }
-                list.add(nextFormat.substring(lastReset.peek().getRight()) + str.substring(prevBreak, k));
-                format = nextFormat.toString();
-                if (k != i) {
-                    j = prevCandidate; // k!=i means usable break point found, j should back to corresponding location
-                }
-                prevBreak = k;
-                i = k;
-                strWidth = font.getCharWidth(c); // Width of first char of new line.
             }
-            i++;
-            j++;
-        } while (i < str.length());
-        list.add(format + str.substring(prevBreak));
+        }
+        list.add(line.toString());
         callback.setReturnValue(list);
     }
 
@@ -118,89 +116,85 @@ public abstract class MixinRenderUtils {
             callback.setReturnValue(Collections.singletonList(""));
             return;
         }
-        String cleanStr = str.replaceAll("§.", "").replaceAll("§", "");
-        WrapFix.BREAK_ITERATOR.setText(cleanStr);
+        WrapFix.BREAK_ITERATOR.setText(str);
         List<String> list = new ArrayList<>();
-        String format = ""; // For last line's format since it should use format of previous line
-        StringBuilder nextFormat = new StringBuilder();
-        int i = 0, j = 0, k, l;
-        Stack<Reset> lastReset = new Stack<>();
-        lastReset.push(new Reset(0, 0));
-        int strWidth = 0;
-        int prevBreak = 0;
+        int lineWidth = 0, fed = 0, icui, d;
+        StringBuilder format = new StringBuilder(); // For next line's format since it should use format of previous line
+        HashMap<Integer, Pair<Integer, String>> map = new HashMap<>();
+        StringBuilder line = new StringBuilder();
+        String temp;
+        char[] chars = str.toCharArray();
+        char f;
         boolean bold = false;
-        char c, f, back;
-        int prevCandidate;
-        do {
-            switch (c = str.charAt(i)) {
+        for (int i = 0; i < chars.length; i++) {
+            char current = chars[i];
+            switch (current) {
                 case '\n':
-                    list.add(str.substring(prevBreak, i));
-                    format = nextFormat.toString();
-                    prevBreak = i + 1;
-                    strWidth = 0;
-                    break;
-                case '§': // format start
-                    if (i + 1 < str.length()) { // Prevent out of bound
-                        f = str.charAt(++i);
-                        nextFormat.append('§').append(f); // Add to current format code
+                    list.add(line.toString());
+                    fed += line.length() + 1;
+                    line.delete(0, line.length()).append(format);
+                    lineWidth = 0;
+                    map.put(i, Pair.of(lineWidth, format.toString()));
+                    continue;
+                case '§':
+                    if (i + 1 < chars.length) { // Prevent out of bound
+                        f = chars[i + 1];
                         if (f != 'l' && f != 'L') { // Check start of bold style
                             if (f == 'r' || f == 'R' || isFormatColor(f)) { // Not Bold, check end of style
                                 bold = false;
-                                lastReset.push(new Reset(i - 1, nextFormat.length())); // push reset location in str and format to stack
+                                if (f == 'r' || f == 'R') {
+                                    format.delete(0, format.length()); // Clear the format
+                                } else {
+                                    format.append('§').append(f); // Add to current format code
+                                }
+                                line.append('§').append(f);
+                                map.put(i, Pair.of(lineWidth, format.toString()));
+                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                continue;
+                            }
+                            if (f >= 'k' && f <= 'o' || f >= 'K' && f <= 'O') {
+                                format.append('§').append(f); // Add to current format code
+                                line.append('§').append(f);
+                                map.put(i, Pair.of(lineWidth, format.toString()));
+                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                continue;
                             }
                         } else {
                             bold = true;
+                            format.append('§').append(f); // Add to current format code
+                            line.append('§').append(f);
+                            map.put(i, Pair.of(lineWidth, format.toString()));
+                            map.put(++i, Pair.of(lineWidth, format.toString()));
+                            continue;
                         }
                     }
-                    break;
-
                 default:
-                    strWidth += font.getCharWidth(c);
+                    line.append(current);
+                    lineWidth += font.getCharWidth(current);
                     if (bold) {
-                        // Bold style is fat
-                        strWidth += 1;
+                        lineWidth++; // Bold style is one pixel wider
                     }
                     break;
-
             }
-            if (strWidth > wrapWidth) {
-                WrapFix.BREAK_ITERATOR.following(j); // The legal break right after j
-                prevCandidate = WrapFix.BREAK_ITERATOR.previous(); // Find the nearest legit break
-                k = i;
-                l = j;
-                if (prevCandidate > -1) {
-                    while (l > prevCandidate && k > 0) { // Backward searching to get actual format at break
-                        k--;
-                        l--;
-                        back = str.charAt(k);
-                        if (back == '§') {
-                            if (k == lastReset.peek().getLeft()) {
-                                lastReset.pop(); // Remove reset
-                            }
-                            nextFormat.delete(nextFormat.length() - 2, nextFormat.length()); // Remove format
-                            l++;
-                        }
-                    }
+            map.put(i, Pair.of(lineWidth, format.toString()));
+            if (lineWidth > wrapWidth) {
+                icui = WrapFix.BREAK_ITERATOR.preceding(i);
+                if (icui <= fed) {
+                    list.add(line.substring(0,line.length() - 1));
+                    fed += line.length() - 1;
+                    line.delete(0, line.length()).append(format).append(current);
+                    lineWidth = font.getCharWidth(current);
+                } else {
+                    d = icui - fed;
+                    list.add(line.substring(0, d));
+                    temp = line.substring(d);
+                    fed += d;
+                    line.delete(0, line.length()).append(map.get(icui).getRight()).append(temp);
+                    lineWidth = lineWidth - map.get(icui - 1).getLeft();
                 }
-                if (k <= prevBreak) {
-                    k = i; // Break in previous line, not usable, set it to current i
-                }
-                if (str.charAt(k - 1) == '§') {
-                    k--; // Make sure not to break in format code. Can't figure out how to put it in while(), so
-                }
-                list.add(nextFormat.substring(lastReset.peek().getRight()) + str.substring(prevBreak, k));
-                format = nextFormat.toString();
-                if (k != i) {
-                    j = prevCandidate; // k!=i means usable break point found, j should back to corresponding location
-                }
-                prevBreak = k;
-                i = k;
-                strWidth = font.getCharWidth(c); // Width of first char of new line.
             }
-            i++;
-            j++;
-        } while (i < str.length());
-        list.add(format + str.substring(prevBreak));
+        }
+        list.add(line.toString());
         callback.setReturnValue(list);
     }
 

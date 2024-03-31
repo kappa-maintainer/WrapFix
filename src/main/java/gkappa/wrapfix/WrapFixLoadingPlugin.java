@@ -1,5 +1,6 @@
 package gkappa.wrapfix;
 
+import com.cleanroommc.configanytime.ConfigAnytime;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.SortingIndex;
@@ -18,6 +19,9 @@ import java.util.Map;
 @MCVersion("1.12.2")
 public class WrapFixLoadingPlugin
         implements IFMLLoadingPlugin, IEarlyMixinLoader {
+    public WrapFixLoadingPlugin() {
+        ConfigAnytime.register(WrapFixConfig.class);
+    }
     public String[] getASMTransformerClass() {
         return new String[0];
     }
@@ -49,7 +53,7 @@ public class WrapFixLoadingPlugin
     @Override
     public boolean shouldMixinConfigQueue(String mixinConfig) {
         if(mixinConfig.equals("wrapfix.mixins.json")) {
-            return true;
+            return WrapFixConfig.patchVanilla && System.getProperty("java.version").startsWith("1.8");
         }
         return IEarlyMixinLoader.super.shouldMixinConfigQueue(mixinConfig);
     }

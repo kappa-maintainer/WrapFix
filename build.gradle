@@ -22,7 +22,7 @@ apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: 'org.spongepowered.mixin'
 
 
-version "1.2.0-beta"
+version "1.3.0-beta"
 group "gkappa.wrapfix"
 archivesBaseName = "WrapFix"
 
@@ -41,7 +41,6 @@ minecraft {
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
-
             jvmArg "-Dfml.coreMods.load=gkappa.wrapfix.WrapFixLoadingPlugin"
             jvmArg "-Dmixin.hotSwap=true"
             jvmArg "-Dmixin.checks.interfaces=true"
@@ -119,10 +118,10 @@ dependencies {
     annotationProcessor 'com.google.code.gson:gson:2.8.9'
 
     // ForgeGradle:
-    implementation ('zone.rong:mixinbooter:8.9') {
+    implementation ('zone.rong:mixinbooter:9.1') {
         transitive = false
     }
-    annotationProcessor ('zone.rong:mixinbooter:8.9') {
+    annotationProcessor ('zone.rong:mixinbooter:9.1') {
         transitive = false
     }
 
@@ -133,6 +132,7 @@ dependencies {
     compileOnly fg.deobf( "curse.maven:Botania-225643:3330934" )
     compileOnly fg.deobf( "curse.maven:Psi-241665:3085917" )
     compileOnly fg.deobf( "curse.maven:Baubles-227083:2518667" )
+    implementation "com.cleanroommc:configanytime:3.0"
 
 
     //compileOnly ("blus:immersiveengineering:0.12-98")

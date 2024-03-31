@@ -27,9 +27,10 @@ public abstract class MixinRenderUtils {
         }
         WrapFix.BREAK_ITERATOR.setText(str);
         List<String> list = new ArrayList<>();
-        int lineWidth = 0, fed = 0, icui, d;
+        int lineWidth = 0, fed = 0, icui, d, prevFormat = 0;
         StringBuilder format = new StringBuilder(); // For next line's format since it should use format of previous line
-        HashMap<Integer, Pair<Integer, String>> map = new HashMap<>();
+        int[] widths = new int[wrapWidth/4];
+        String[] formats = new String[wrapWidth/4];
         StringBuilder line = new StringBuilder();
         String temp;
         char[] chars = str.toCharArray();
@@ -43,7 +44,8 @@ public abstract class MixinRenderUtils {
                     fed += line.length() + 1;
                     line.delete(0, line.length()).append(format);
                     lineWidth = 0;
-                    map.put(i, Pair.of(lineWidth, format.toString()));
+                    widths[i - fed] = lineWidth;
+                    formats[i - fed] = format.toString();
                     continue;
                 case '§':
                     if (i + 1 < chars.length) { // Prevent out of bound
@@ -57,23 +59,24 @@ public abstract class MixinRenderUtils {
                                     format.append('§').append(f); // Add to current format code
                                 }
                                 line.append('§').append(f);
-                                map.put(i, Pair.of(lineWidth, format.toString()));
-                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                widths[i - fed] = lineWidth;
+                                formats[i - fed] = format.toString();
+                                i++;
                                 continue;
                             }
                             if (f >= 'k' && f <= 'o' || f >= 'K' && f <= 'O') {
                                 format.append('§').append(f); // Add to current format code
                                 line.append('§').append(f);
-                                map.put(i, Pair.of(lineWidth, format.toString()));
-                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                widths[i - fed] = lineWidth;
+                                formats[i - fed] = format.toString();
                                 continue;
                             }
                         } else {
                             bold = true;
                             format.append('§').append(f); // Add to current format code
                             line.append('§').append(f);
-                            map.put(i, Pair.of(lineWidth, format.toString()));
-                            map.put(++i, Pair.of(lineWidth, format.toString()));
+                            widths[i - fed] = lineWidth;
+                            formats[i - fed] = format.toString();
                             continue;
                         }
                     }
@@ -85,21 +88,28 @@ public abstract class MixinRenderUtils {
                     }
                     break;
             }
-            map.put(i, Pair.of(lineWidth, format.toString()));
-            if (lineWidth > wrapWidth) {
-                icui = WrapFix.BREAK_ITERATOR.preceding(i);
-                if (icui <= fed) {
+            widths[i - fed] = lineWidth;
+            formats[i - fed] = format.toString();
+            if (lineWidth >= wrapWidth) {
+                if (WrapFix.BREAK_ITERATOR.isBoundary(i)) {
+                    icui = i;
+                } else {
+                    icui = WrapFix.BREAK_ITERATOR.preceding(i);
+                }
+                if (icui <= fed || i == icui) {
                     list.add(line.substring(0,line.length() - 1));
                     fed += line.length() - 1;
                     line.delete(0, line.length()).append(format).append(current);
+                    prevFormat = format.length();
                     lineWidth = font.getCharWidth(current);
                 } else {
                     d = icui - fed;
-                    list.add(line.substring(0, d));
-                    temp = line.substring(d);
-                    fed += d;
-                    line.delete(0, line.length()).append(map.get(icui).getRight()).append(temp);
-                    lineWidth = lineWidth - map.get(icui - 1).getLeft();
+                    list.add(line.substring(prevFormat, d + prevFormat));
+                    temp = line.substring(d + prevFormat);
+                    fed = icui;
+                    line.delete(0, line.length()).append(formats[d]).append(temp);
+                    prevFormat = formats[d].length();
+                    lineWidth = lineWidth - widths[d - 1];
                 }
             }
         }
@@ -115,9 +125,10 @@ public abstract class MixinRenderUtils {
         }
         WrapFix.BREAK_ITERATOR.setText(str);
         List<String> list = new ArrayList<>();
-        int lineWidth = 0, fed = 0, icui, d;
+        int lineWidth = 0, fed = 0, icui, d, prevFormat = 0;
         StringBuilder format = new StringBuilder(); // For next line's format since it should use format of previous line
-        HashMap<Integer, Pair<Integer, String>> map = new HashMap<>();
+        int[] widths = new int[wrapWidth/4];
+        String[] formats = new String[wrapWidth/4];
         StringBuilder line = new StringBuilder();
         String temp;
         char[] chars = str.toCharArray();
@@ -131,7 +142,8 @@ public abstract class MixinRenderUtils {
                     fed += line.length() + 1;
                     line.delete(0, line.length()).append(format);
                     lineWidth = 0;
-                    map.put(i, Pair.of(lineWidth, format.toString()));
+                    widths[i - fed] = lineWidth;
+                    formats[i - fed] = format.toString();
                     continue;
                 case '§':
                     if (i + 1 < chars.length) { // Prevent out of bound
@@ -145,23 +157,24 @@ public abstract class MixinRenderUtils {
                                     format.append('§').append(f); // Add to current format code
                                 }
                                 line.append('§').append(f);
-                                map.put(i, Pair.of(lineWidth, format.toString()));
-                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                widths[i - fed] = lineWidth;
+                                formats[i - fed] = format.toString();
+                                i++;
                                 continue;
                             }
                             if (f >= 'k' && f <= 'o' || f >= 'K' && f <= 'O') {
                                 format.append('§').append(f); // Add to current format code
                                 line.append('§').append(f);
-                                map.put(i, Pair.of(lineWidth, format.toString()));
-                                map.put(++i, Pair.of(lineWidth, format.toString()));
+                                widths[i - fed] = lineWidth;
+                                formats[i - fed] = format.toString();
                                 continue;
                             }
                         } else {
                             bold = true;
                             format.append('§').append(f); // Add to current format code
                             line.append('§').append(f);
-                            map.put(i, Pair.of(lineWidth, format.toString()));
-                            map.put(++i, Pair.of(lineWidth, format.toString()));
+                            widths[i - fed] = lineWidth;
+                            formats[i - fed] = format.toString();
                             continue;
                         }
                     }
@@ -173,21 +186,28 @@ public abstract class MixinRenderUtils {
                     }
                     break;
             }
-            map.put(i, Pair.of(lineWidth, format.toString()));
-            if (lineWidth > wrapWidth) {
-                icui = WrapFix.BREAK_ITERATOR.preceding(i);
-                if (icui <= fed) {
+            widths[i - fed] = lineWidth;
+            formats[i - fed] = format.toString();
+            if (lineWidth >= wrapWidth) {
+                if (WrapFix.BREAK_ITERATOR.isBoundary(i)) {
+                    icui = i;
+                } else {
+                    icui = WrapFix.BREAK_ITERATOR.preceding(i);
+                }
+                if (icui <= fed || i == icui) {
                     list.add(line.substring(0,line.length() - 1));
                     fed += line.length() - 1;
                     line.delete(0, line.length()).append(format).append(current);
+                    prevFormat = format.length();
                     lineWidth = font.getCharWidth(current);
                 } else {
                     d = icui - fed;
-                    list.add(line.substring(0, d));
-                    temp = line.substring(d);
-                    fed += d;
-                    line.delete(0, line.length()).append(map.get(icui).getRight()).append(temp);
-                    lineWidth = lineWidth - map.get(icui - 1).getLeft();
+                    list.add(line.substring(prevFormat, d + prevFormat));
+                    temp = line.substring(d + prevFormat);
+                    fed = icui;
+                    line.delete(0, line.length()).append(formats[d]).append(temp);
+                    prevFormat = formats[d].length();
+                    lineWidth = lineWidth - widths[d - 1];
                 }
             }
         }

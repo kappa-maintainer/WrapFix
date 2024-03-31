@@ -6,7 +6,7 @@ import zone.rong.mixinbooter.ILateMixinLoader;
 
 import java.util.List;
 
-public class WrapMixinLoader implements ILateMixinLoader {
+public class WrapFixLateLoader implements ILateMixinLoader {
 
     @Override
     public List<String> getMixinConfigs() {
@@ -16,16 +16,16 @@ public class WrapMixinLoader implements ILateMixinLoader {
     @Override
     public boolean shouldMixinConfigQueue(String mixinConfig) {
         if(mixinConfig.equals("wrapfix.BQ.mixins.json")) {
-            return Loader.isModLoaded("betterquesting");
+            return Loader.isModLoaded("betterquesting") && WrapFixConfig.patchBetterQuesting;
         }
         if(mixinConfig.equals("wrapfix.IW.mixins.json")) {
-            return Loader.isModLoaded("industrialwires");
+            return Loader.isModLoaded("industrialwires") && WrapFixConfig.patchIndustrialWires;
         }
         if(mixinConfig.equals("wrapfix.Bot.mixins.json")) {
-            return Loader.isModLoaded("botania");
+            return Loader.isModLoaded("botania") && WrapFixConfig.patchBotania;
         }
         if(mixinConfig.equals("wrapfix.Psi.mixins.json")) {
-            return Loader.isModLoaded("psi");
+            return Loader.isModLoaded("psi") && WrapFixConfig.patchPsi;
         }
         return false;
     }

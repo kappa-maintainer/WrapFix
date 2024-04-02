@@ -115,9 +115,8 @@ public abstract class MixinFontRenderer {
                     lineWidth = getCharWidth(current);
                 } else {
                     d = icui - fed;
-                    String first = line.substring(0, d + prevFormat);
-                    if (first.endsWith("§")) WrapFix.logger.info(line);
-                    list.add(first);
+                    if (line.charAt(d + prevFormat) == '§') d--;
+                    list.add(line.substring(0, d + prevFormat));
                     temp = line.substring(d + prevFormat);
                     fed = icui;
                     line.delete(0, line.length()).append(formats[d]).append(temp);

@@ -53,7 +53,7 @@ public class WrapFixLoadingPlugin
     @Override
     public boolean shouldMixinConfigQueue(String mixinConfig) {
         if(mixinConfig.equals("wrapfix.mixins.json")) {
-            return WrapFixConfig.patchVanilla && System.getProperty("java.version").startsWith("1.8");
+            return WrapFixConfig.patchVanilla;
         }
         return IEarlyMixinLoader.super.shouldMixinConfigQueue(mixinConfig);
     }

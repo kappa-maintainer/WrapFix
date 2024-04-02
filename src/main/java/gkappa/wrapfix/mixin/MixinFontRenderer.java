@@ -1,16 +1,14 @@
 package gkappa.wrapfix.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import gkappa.wrapfix.WrapFix;
 import net.minecraft.client.gui.FontRenderer;
-import org.apache.commons.lang3.tuple.Pair;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -21,15 +19,25 @@ import java.util.*;
 @Mixin({FontRenderer.class})
 public abstract class MixinFontRenderer {
 
-    @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V", ordinal = 1, shift = At.Shift.BY, by = 2))
-    private void hackSeg(String text, boolean shadow, CallbackInfo ci, @Local(ordinal = 0)LocalIntRef i) {
-        if (text.charAt(i.get() + 1) == '§')
-            i.set(i.get() - 1);
+    @Shadow
+    private static boolean isFormatSpecial(char formatChar) {
+        return false;
     }
 
-    @ModifyConstant(method = "renderStringAtPos", constant = @Constant(stringValue = "0123456789abcdefklmnor"))
-    private String hackConst(String origin) {
-        return "0123456789abcdefklmnor§";
+    @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Ljava/lang/String;length()I", ordinal = 1))
+    private void captureLocal(String text, boolean shadow, CallbackInfo ci, @Share("i") LocalIntRef intRef, @Local(ordinal = 0) int index) {
+        intRef.set(index);
+    }
+    @Redirect(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Ljava/lang/String;length()I", ordinal = 1))
+    private int hackSeg(String instance, @Share("i") LocalIntRef intRef) {
+        int i = intRef.get() + 1;
+        if (i < instance.length()) {
+            char c = instance.charAt(i);
+            if (!isFormatSpecial(c) && !isFormatColor(c)) {
+                return -1;
+            }
+        }
+        return instance.length();
     }
     
     @Inject(at = @At("HEAD"), method = "listFormattedStringToWidth", cancellable = true)
@@ -42,8 +50,8 @@ public abstract class MixinFontRenderer {
         List<String> list = new ArrayList<>();
         int lineWidth = 0, fed = 0, icui, d, prevFormat = 0;
         StringBuilder format = new StringBuilder(); // For next line's format since it should use format of previous line
-        int[] widths = new int[wrapWidth/4];
-        String[] formats = new String[wrapWidth/4];
+        int[] widths = new int[str.length()];
+        String[] formats = new String[str.length()];
         StringBuilder line = new StringBuilder();
         String temp;
         char[] chars = str.toCharArray();
@@ -54,7 +62,7 @@ public abstract class MixinFontRenderer {
             switch (current) {
                 case '\n':
                     list.add(line.toString());
-                    fed += line.length() + 1;
+                    fed = i;
                     line.delete(0, line.length()).append(format);
                     lineWidth = 0;
                     widths[i - fed] = lineWidth;
@@ -63,33 +71,23 @@ public abstract class MixinFontRenderer {
                 case '§':
                     if (i + 1 < chars.length) { // Prevent out of bound
                         f = chars[i + 1];
-                        if (f != 'l' && f != 'L') { // Check start of bold style
-                            if (f == 'r' || f == 'R' || isFormatColor(f)) { // Not Bold, check end of style
-                                bold = false;
-                                if (f == 'r' || f == 'R') {
+                        boolean isC = isFormatColor(f);
+                        if (isC || isFormatSpecial(f)) {
+                            if (f != 'l' && f != 'L') { // Check start of bold style
+                                if (f == 'r' || f == 'R') { // Not Bold, check end of style
+                                    bold = false;
                                     format.delete(0, format.length()); // Clear the format
-                                } else {
-                                    format.append('§').append(f); // Add to current format code
+                                } else if (isC) {
+                                    bold = false;
                                 }
-                                line.append('§').append(f);
-                                widths[i - fed] = lineWidth;
-                                formats[i - fed] = format.toString();
-                                i++;
-                                continue;
+                            } else {
+                                bold = true;
                             }
-                            if (f >= 'k' && f <= 'o' || f >= 'K' && f <= 'O') {
-                                format.append('§').append(f); // Add to current format code
-                                line.append('§').append(f);
-                                widths[i - fed] = lineWidth;
-                                formats[i - fed] = format.toString();
-                                continue;
-                            }
-                        } else {
-                            bold = true;
                             format.append('§').append(f); // Add to current format code
                             line.append('§').append(f);
                             widths[i - fed] = lineWidth;
                             formats[i - fed] = format.toString();
+                            i++;
                             continue;
                         }
                     }
@@ -111,13 +109,13 @@ public abstract class MixinFontRenderer {
                 }
                 if (icui <= fed || i == icui) {
                     list.add(line.substring(0,line.length() - 1));
-                    fed += line.length() - 1;
+                    fed = i - 1;
                     line.delete(0, line.length()).append(format).append(current);
                     prevFormat = format.length();
                     lineWidth = getCharWidth(current);
                 } else {
                     d = icui - fed;
-                    list.add(line.substring(prevFormat, d + prevFormat));
+                    list.add(line.substring(0, d + prevFormat));
                     temp = line.substring(d + prevFormat);
                     fed = icui;
                     line.delete(0, line.length()).append(formats[d]).append(temp);

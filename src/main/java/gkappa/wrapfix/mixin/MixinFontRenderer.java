@@ -86,7 +86,9 @@ public abstract class MixinFontRenderer {
                             format.append('§').append(f); // Add to current format code
                             line.append('§').append(f);
                             widths[i - fed] = lineWidth;
+                            widths[i - fed + 1] = lineWidth;
                             formats[i - fed] = format.toString();
+                            formats[i - fed + 1] = format.toString();
                             i++;
                             continue;
                         }
@@ -115,7 +117,7 @@ public abstract class MixinFontRenderer {
                     lineWidth = getCharWidth(current);
                 } else {
                     d = icui - fed;
-                    if (line.charAt(d + prevFormat - 1) == '§') WrapFix.logger.info("{} {} {}", line, d + prevFormat, list.toString());
+                    if (line.charAt(d + prevFormat - 1) == '§') d--;
                     list.add(line.substring(0, d + prevFormat));
                     temp = line.substring(d + prevFormat);
                     fed = icui;

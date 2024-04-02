@@ -114,8 +114,8 @@ public abstract class MixinFontRenderer {
                     prevFormat = format.length();
                     lineWidth = getCharWidth(current);
                 } else {
-                    if (chars[icui] == '§') {
-                        if (isFormatSpecial(chars[icui + 1]) || isFormatColor(chars[icui + 1])) {
+                    if (chars[icui - 1] == '§') {
+                        if (isFormatSpecial(chars[icui]) || isFormatColor(chars[icui])) {
                             icui++;
                         }
                     }

@@ -114,13 +114,10 @@ public abstract class MixinFontRenderer {
                     prevFormat = format.length();
                     lineWidth = getCharWidth(current);
                 } else {
-                    if (chars[icui - 1] == '§') {
-                        if (isFormatSpecial(chars[icui]) || isFormatColor(chars[icui])) {
-                            icui++;
-                        }
-                    }
                     d = icui - fed;
-                    list.add(line.substring(0, d + prevFormat));
+                    String first = line.substring(0, d + prevFormat);
+                    if (first.endsWith("§")) WrapFix.logger.info(line);
+                    list.add(first);
                     temp = line.substring(d + prevFormat);
                     fed = icui;
                     line.delete(0, line.length()).append(formats[d]).append(temp);

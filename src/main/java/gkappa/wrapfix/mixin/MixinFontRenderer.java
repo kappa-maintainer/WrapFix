@@ -19,10 +19,6 @@ import java.util.*;
 @Mixin({FontRenderer.class})
 public abstract class MixinFontRenderer {
 
-    @Shadow
-    private static boolean isFormatSpecial(char formatChar) {
-        return false;
-    }
 
     @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Ljava/lang/String;length()I", ordinal = 1))
     private void captureLocal(String text, boolean shadow, CallbackInfo ci, @Share("i") LocalIntRef intRef, @Local(ordinal = 0) int index) {
@@ -62,11 +58,11 @@ public abstract class MixinFontRenderer {
             switch (current) {
                 case '\n':
                     list.add(line.toString());
-                    fed++;
+                    fed = i + 1;
                     line.delete(0, line.length()).append(format);
                     lineWidth = 0;
-                    widths[i - fed] = lineWidth;
-                    formats[i - fed] = format.toString();
+                    widths[0] = lineWidth;
+                    formats[0] = format.toString();
                     continue;
                 case '§':
                     if (i + 1 < chars.length) { // Prevent out of bound
@@ -109,7 +105,7 @@ public abstract class MixinFontRenderer {
                 } else {
                     icui = WrapFix.BREAK_ITERATOR.preceding(i);
                 }
-                if (icui <= fed || i == icui) {
+                if (icui <= fed + 1 || i == icui) {
                     list.add(line.substring(0,line.length() - 1));
                     fed = i;
                     line.delete(0, line.length()).append(format).append(current);
@@ -138,6 +134,12 @@ public abstract class MixinFontRenderer {
 
     @Shadow
     private static boolean isFormatColor(char c1) {
+        return false;
+    }
+
+
+    @Shadow
+    private static boolean isFormatSpecial(char formatChar) {
         return false;
     }
 }

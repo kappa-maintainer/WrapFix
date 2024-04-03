@@ -62,7 +62,7 @@ public abstract class MixinFontRenderer {
             switch (current) {
                 case '\n':
                     list.add(line.toString());
-                    fed = i;
+                    fed++;
                     line.delete(0, line.length()).append(format);
                     lineWidth = 0;
                     widths[i - fed] = lineWidth;
@@ -111,7 +111,7 @@ public abstract class MixinFontRenderer {
                 }
                 if (icui <= fed || i == icui) {
                     list.add(line.substring(0,line.length() - 1));
-                    fed = i - 1;
+                    fed = i;
                     line.delete(0, line.length()).append(format).append(current);
                     prevFormat = format.length();
                     lineWidth = getCharWidth(current);
@@ -120,7 +120,7 @@ public abstract class MixinFontRenderer {
                     if (line.charAt(d + prevFormat - 1) == '§') d--;
                     list.add(line.substring(0, d + prevFormat));
                     temp = line.substring(d + prevFormat);
-                    fed = icui;
+                    fed += d;
                     line.delete(0, line.length()).append(formats[d]).append(temp);
                     prevFormat = formats[d].length();
                     lineWidth = lineWidth - widths[d - 1];

@@ -1,6 +1,10 @@
 package gkappa.wrapfix;
 
 import com.cleanroommc.configanytime.ConfigAnytime;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.asm.FMLSanityChecker;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
+import net.minecraftforge.fml.relauncher.FMLSecurityManager;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.SortingIndex;
@@ -19,8 +23,14 @@ import java.util.Map;
 @MCVersion("1.12.2")
 public class WrapFixLoadingPlugin
         implements IFMLLoadingPlugin, IEarlyMixinLoader {
+    private static boolean isCleanroom = true;
     public WrapFixLoadingPlugin() {
         ConfigAnytime.register(WrapFixConfig.class);
+        try {
+            Class.forName("com.cleanroommc.common.CleanroomVersion");
+        } catch (Throwable e) {
+            isCleanroom = false;
+        }
     }
     public String[] getASMTransformerClass() {
         return new String[0];
@@ -53,7 +63,7 @@ public class WrapFixLoadingPlugin
     @Override
     public boolean shouldMixinConfigQueue(String mixinConfig) {
         if(mixinConfig.equals("wrapfix.mixins.json")) {
-            return WrapFixConfig.patchVanilla;
+            return WrapFixConfig.patchVanilla && !isCleanroom;
         }
         return IEarlyMixinLoader.super.shouldMixinConfigQueue(mixinConfig);
     }

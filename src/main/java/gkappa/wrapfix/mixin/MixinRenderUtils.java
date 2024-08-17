@@ -49,6 +49,7 @@ public abstract class MixinRenderUtils {
                     list.add(line.toString());
                     fed = i + 1;
                     line.delete(0, line.length()).append(format);
+                    prevFormat = format.length();
                     lineWidth = 0;
                     widths[0] = lineWidth;
                     formats[0] = format.toString();

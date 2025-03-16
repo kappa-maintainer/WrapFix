@@ -3,27 +3,27 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 buildscript {
     repositories {
         maven { url 'https://maven.minecraftforge.net' }
-        maven { url "https://repo.spongepowered.org/repository/maven-public" }
+        maven { url 'https://repo.spongepowered.org/repository/maven-public' }
         mavenCentral()
         gradlePluginPortal()
     }
     dependencies {
-        classpath "io.github.goooler.shadow:shadow-gradle-plugin:8.1.7"
+        classpath 'com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-beta10'
         classpath 'net.minecraftforge.gradle:ForgeGradle:6.0.+'
-        classpath "org.spongepowered:mixingradle:0.7.+"
+        classpath 'org.spongepowered:mixingradle:0.7.+'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'maven-publish'
-apply plugin: "io.github.goooler.shadow"
+apply plugin: 'com.gradleup.shadow'
 apply plugin: 'org.spongepowered.mixin'
 
 
-version "1.3.5-beta"
-group "gkappa.wrapfix"
-archivesBaseName = "WrapFix"
+version '1.3.6'
+group 'gkappa.wrapfix'
+archivesBaseName = 'WrapFix'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
@@ -110,7 +110,7 @@ dependencies {
         exclude module: "gson"
         exclude module: "commons-io"
     }*/
-    shade "com.ibm.icu:icu4j:75.1"
+    shade "com.ibm.icu:icu4j:76.1"
 
     // Common:
     annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
@@ -118,10 +118,10 @@ dependencies {
     annotationProcessor 'com.google.code.gson:gson:2.8.9'
 
     // ForgeGradle:
-    implementation ('zone.rong:mixinbooter:9.1') {
+    implementation ('zone.rong:mixinbooter:10.5') {
         transitive = false
     }
-    annotationProcessor ('zone.rong:mixinbooter:9.1') {
+    annotationProcessor ('zone.rong:mixinbooter:10.5') {
         transitive = false
     }
 
@@ -132,6 +132,7 @@ dependencies {
     compileOnly fg.deobf( "curse.maven:Botania-225643:3330934" )
     compileOnly fg.deobf( "curse.maven:Psi-241665:3085917" )
     compileOnly fg.deobf( "curse.maven:Baubles-227083:2518667" )
+    compileOnly fg.deobf("curse.maven:smooth-font-285742:3944565")
     implementation "com.cleanroommc:configanytime:3.0"
 
 
@@ -191,11 +192,11 @@ mixin {
 }
 
 shadowJar {
-    archiveClassifier.set(null)
+    archiveClassifier.set("shadow")
     configurations = [project.configurations.shade]
     relocate('com.ibm.icu','repack.com.ibm.icu')
     dependencies {
-        include(dependency("com.ibm.icu:icu4j:75.1"))
+        include(dependency("com.ibm.icu:icu4j:76.1"))
     }
     manifest {
         inheritFrom jar.manifest

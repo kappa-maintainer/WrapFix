@@ -1,6 +1,6 @@
-package gkappa.wrapfix.mixin;
+package top.outlands.wrapfix.mixin;
 
-import gkappa.wrapfix.CJKTextHelper;
+import top.outlands.wrapfix.CJKTextHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,7 +32,7 @@ public class MixinTextHelper {
         FontRenderer font = Minecraft.getMinecraft().fontRenderer;
         boolean unicode = font.getUnicodeFlag();
         font.setUnicodeFlag(true);
-        String text = TooltipHelper.local(unlocalizedText, format).replaceAll("&", "\u00a7");
+        String text = TooltipHelper.local(unlocalizedText, format).replaceAll("&", "§");
 
         String[] textEntries = text.split("<br>");
         List<List<String>> lines = new ArrayList<>();
@@ -78,7 +78,7 @@ public class MixinTextHelper {
                 lineStr.append(s);
             }
 
-            if((lineStr.length() > 0) || lastLine.isEmpty()) {
+            if((!lineStr.isEmpty()) || lastLine.isEmpty()) {
                 y += 10;
                 textLines.add(lineStr.toString());
             }

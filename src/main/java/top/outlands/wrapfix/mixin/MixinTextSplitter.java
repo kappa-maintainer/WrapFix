@@ -1,6 +1,6 @@
-package gkappa.wrapfix.mixin;
+package top.outlands.wrapfix.mixin;
 
-import gkappa.wrapfix.CJKTextHelper;
+import top.outlands.wrapfix.CJKTextHelper;
 import malte0811.industrialwires.client.manual.TextSplitter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

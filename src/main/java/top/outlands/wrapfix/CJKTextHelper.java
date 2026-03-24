@@ -1,5 +1,6 @@
-package gkappa.wrapfix;
+package top.outlands.wrapfix;
 
+import com.ibm.icu.segmenter.Segments;
 import com.ibm.icu.text.BreakIterator;
 
 import java.util.ArrayList;
@@ -7,19 +8,10 @@ import java.util.List;
 
 public class CJKTextHelper {
     public static String[] Splitter(String s) {
-        WrapFix.BREAK_ITERATOR.setText(s);
-        WrapFix.BREAK_ITERATOR.first();
+        Segments segments = WrapFix.SEGMENTER.segment(s);
         List<String> result = new ArrayList<>();
-        int next, current;
-        while (WrapFix.BREAK_ITERATOR.current() != BreakIterator.DONE) {
-            current = WrapFix.BREAK_ITERATOR.current();
-            next = WrapFix.BREAK_ITERATOR.next();
-            if (next > 0)
-                result.add(s.substring(current, next));
-            else
-                break;
-        }
-        return  result.toArray(new String[0]);
+        segments.segments().forEach(segment -> result.add(segment.getSubSequence().toString()));
+        return result.toArray(new String[0]);
     }
 
     public static boolean isCharCJK(char c) {

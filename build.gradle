@@ -1,216 +1,254 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
-buildscript {
-    repositories {
-        maven { url 'https://maven.minecraftforge.net' }
-        maven { url 'https://repo.spongepowered.org/repository/maven-public' }
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    dependencies {
-        classpath 'com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-beta10'
-        classpath 'net.minecraftforge.gradle:ForgeGradle:6.0.+'
-        classpath 'org.spongepowered:mixingradle:0.7.+'
-    }
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'com.gradleup.shadow' version '9.4.0'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
+    id 'xyz.wagyourtail.unimined' version '1.4.15-kappa'
+    id 'net.kyori.blossom' version '2.2.0'
 }
 
-apply plugin: 'net.minecraftforge.gradle'
-// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-apply plugin: 'maven-publish'
-apply plugin: 'com.gradleup.shadow'
-apply plugin: 'org.spongepowered.mixin'
+import org.jetbrains.gradle.ext.Gradle
+
+apply from: 'gradle/scripts/helpers.gradle'
+
+// Early Assertions
+assertProperty 'mod_version'
+assertProperty 'root_package'
+assertProperty 'mod_id'
+assertProperty 'mod_name'
+
+assertSubProperties 'use_access_transformer', 'access_transformer_locations'
+assertSubProperties 'is_coremod', 'coremod_includes_mod', 'coremod_plugin_class_name'
+assertSubProperties 'use_asset_mover', 'asset_mover_version'
+
+setDefaultProperty 'generate_sources_jar', true, false
+setDefaultProperty 'generate_javadocs_jar', true, false
+setDefaultProperty 'minecraft_username', true, 'Developer'
+setDefaultProperty 'extra_jvm_args', false, ''
+
+version = propertyString('mod_version')
+group = propertyString('root_package')
+
+base {
+    archivesName = propertyString('mod_id')
+}
 
 
-version '1.3.6'
-group 'gkappa.wrapfix'
-archivesBaseName = 'WrapFix'
-
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
-
-minecraft {
-    // The mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   Snapshot are built nightly.
-    // stable_#            Stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'stable', version: '39-1.12'
-
-
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
-    runs {
-        client {
-            jvmArg "-Dfml.coreMods.load=gkappa.wrapfix.WrapFixLoadingPlugin"
-            jvmArg "-Dmixin.hotSwap=true"
-            jvmArg "-Dmixin.checks.interfaces=true"
-            jvmArg "-Dmixin.debug=true"
-
-            workingDirectory project.file('run')
-
-            // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
-        }
-
-        server {
-
-            jvmArg "-Dfml.coreMods.load=gkappa.wrapfix.WrapFixLoadingPlugin"
-            jvmArg "-Dmixin.hotSwap=true"
-            jvmArg "-Dmixin.checks.interfaces=true"
-
-            // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
-        }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    if (propertyBool('generate_sources_jar')) {
+        withSourcesJar()
+    }
+    if (propertyBool('generate_javadocs_jar')) {
+        withJavadocJar()
     }
 }
 
 configurations {
-    shade
-    shade.extendsFrom implementation
-
+    contain
+    implementation.extendsFrom(contain)
+    modCompileOnly
+    compileOnly.extendsFrom(modCompileOnly)
+    modRuntimeOnly
+    runtimeOnly.extendsFrom(modRuntimeOnly)
 }
 
-repositories {
-    maven { url "https://repo.spongepowered.org/maven" }
-    maven {
-        url "https://cfa2.cursemaven.com"
-        content {
-            includeGroup "curse.maven"
+String remapTaskName = propertyBool('enable_shadow') ? "remapShadowJar" : "remapJar"
+
+unimined.minecraft {
+    version "1.12.2"
+
+    mappings {
+        mcp("stable", "39-1.12")
+    }
+
+    cleanroom {
+        if (propertyBool('use_access_transformer')) {
+            accessTransformer "${rootProject.projectDir}/src/main/resources/${propertyString('access_transformer_locations')}"
         }
-        metadataSources {
-            artifact()
+        loader "0.5.4-alpha"
+        runs.auth.username = minecraft_username
+        runs.all {
+            systemProperty("crl.dev.mixin", "wrapfix.mod.mixins.json")
+            def extraArgs = propertyString('extra_jvm_args')
+            if (extraArgs != null && !extraArgs.trim().isEmpty()) {
+                jvmArgs += extraArgs.split { "\\s+" }.toList()
+            }
+            if (propertyBool('enable_foundation_debug')) {
+                systemProperty("foundation.dump", "true")
+                systemProperty("foundation.verbose", "true")
+            }
+            if (propertyBool('is_coremod')) {
+                systemProperty("fml.coreMods.load", propertyString('coremod_plugin_class_name'))
+            }
+            return
         }
     }
-    maven {
-        url "https://maven.cleanroommc.com"
+
+    defaultRemapJar = false
+    
+    String jarTaskName = propertyBool('enable_shadow') ? "shadowJar" : "jar"
+    
+    remap(tasks.named(jarTaskName).get()) {
+        mixinRemap {
+            enableBaseMixin()
+            enableMixinExtra()
+        }
     }
-    flatDir {
-        dirs "libs"
+
+    mods {
+        remap(configurations.modCompileOnly)
+        remap(configurations.modRuntimeOnly)
     }
 }
 
 dependencies {
-    // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
-    // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
-    // The userdev artifact is a special name and will get all sorts of transformations applied to it.
-    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
-    
-    /*
-    compileJar("org.spongepowered:mixin:0.8.5") {
-        exclude module: "asm-commons"
-        exclude module: "asm-tree"
-        exclude module: "launchwrapper"
-        exclude module: "guava"
-        exclude module: "log4j-core"
-        exclude module: "gson"
-        exclude module: "commons-io"
-    }*/
-    shade "com.ibm.icu:icu4j:76.1"
-
-    // Common:
-    annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
-    annotationProcessor 'com.google.guava:guava:32.1.2-jre'
-    annotationProcessor 'com.google.code.gson:gson:2.8.9'
-
-    // ForgeGradle:
-    implementation ('zone.rong:mixinbooter:10.5') {
-        transitive = false
+    if (propertyBool('use_asset_mover')) {
+        implementation "com.cleanroommc:assetmover:${propertyString('asset_mover_version')}"
     }
-    annotationProcessor ('zone.rong:mixinbooter:10.5') {
-        transitive = false
+    if (propertyBool('enable_junit_testing')) {
+        testImplementation 'org.junit.jupiter:junit-jupiter:6.0.3'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
-
-    compileOnly fg.deobf( "curse.maven:IndustrialWiresRE-521139:3474268" )
-    compileOnly fg.deobf( "curse.maven:ImmersiveEngineering-231951:2974106" )
-    compileOnly fg.deobf( "curse.maven:BetterQuesting-629629:4010084" )
-    runtimeOnly "curse.maven:BetterQuesting-629629:4010084"
-    compileOnly fg.deobf( "curse.maven:Botania-225643:3330934" )
-    compileOnly fg.deobf( "curse.maven:Psi-241665:3085917" )
-    compileOnly fg.deobf( "curse.maven:Baubles-227083:2518667" )
-    compileOnly fg.deobf("curse.maven:smooth-font-285742:3944565")
-    implementation "com.cleanroommc:configanytime:3.0"
-
-
-    //compileOnly ("blus:immersiveengineering:0.12-98")
-    //compileOnly ("mantle:industrialwires:1.8-38")
-    //compileOnly ("loli:mixinbooter:3.2")
-    //compileOnly ("funguy:betterquesting:3.5.329")
-
-    //runtimeOnly "curse.maven:MixinBooter-419286:3687785"
 }
 
-// Example for how to get properties into the manifest for reading by the runtime..
+apply from: 'gradle/scripts/dependencies.gradle'
+
+processResources {
+    rename '(.+_at.cfg)', 'META-INF/$1'
+}
+
+sourceSets {
+    main {
+        blossom {
+            javaSources {
+                property('mod_id', propertyString('mod_id'))
+                property('mod_name', propertyString('mod_name'))
+                property('mod_version', propertyString('mod_version'))
+                property('package', "${root_package}.${mod_id}")
+            }
+            resources {
+                property('mod_id', propertyString('mod_id'))
+                property('mod_name', propertyString('mod_name'))
+                property('mod_version', propertyString('mod_version'))
+                property('mod_description', propertyString('mod_description'))
+                property('mod_authors', propertyStringList('mod_authors', ',').collect {it.strip()}.join('", "'))
+                property('mod_credits', propertyString('mod_credits'))
+                property('mod_url', propertyString('mod_url'))
+                property('mod_update_json', propertyString('mod_update_json'))
+                property('mod_logo_path', propertyString('mod_logo_path'))
+            }
+        }
+    }
+}
+
+idea {
+    module {
+        inheritOutputDirs = true
+    }
+    project {
+        settings {
+            runConfigurations {
+                '1. Build'(Gradle) {
+                    taskNames = ["build"]
+                }
+                '2. Run Client'(Gradle) {
+                    taskNames = ["runClient"]
+                }
+                '3. Run Server'(Gradle) {
+                    taskNames = ["runServer"]
+                }
+            }
+            compiler.javac {
+                afterEvaluate {
+                    javacAdditionalOptions = '-encoding utf8'
+                    moduleJavacAdditionalOptions = [
+                            (project.name + '.main'): tasks.compileJava.options.compilerArgs.collect { '"' + it + '"' }.join(' ')
+                    ]
+                }
+            }
+        }
+    }
+}
+
+if (!propertyBool('enable_shadow')) {
+    shadowJar.enabled = false
+}
+
+compileJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
+}
+
 jar {
-    manifest {
-        attributes([
-                "FMLCorePluginContainsFMLMod": "true",
-                "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-                "FMLCorePlugin": "gkappa.wrapfix.WrapFixLoadingPlugin",
-                "ForceLoadAsMod": "true"
-        ])
+    archiveClassifier = 'dev'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    if (configurations.contain.size() > 0) {
+        into('/') {
+            from configurations.contain
+        }
     }
-    //finalizedBy('reobfJar')
-}
-
-// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
-//publish.dependsOn('reobfJar')
-
-java {
-    withSourcesJar()
-}
-
-
-publishing {
-  repositories {
-    maven {
-      name = "outlands"
-      url = "https://maven.outlands.top/releases"
-      credentials(PasswordCredentials)
-      authentication {
-        basic(BasicAuthentication)
-      }
+    doFirst {
+        manifest {
+            def attribute_map = [:]
+            attribute_map['ModType'] = "CRL"
+            attribute_map['MixinConfigs'] = "wrapfix.mod.mixins.json"
+            if (configurations.contain.size() > 0) {
+                attribute_map['ContainedDeps'] = configurations.contain.collect { it.name }.join(' ')
+                attribute_map['NonModDeps'] = true
+            }
+            if (propertyBool('is_coremod')) {
+                attribute_map['FMLCorePlugin'] = propertyString('coremod_plugin_class_name')
+                if (propertyBool('coremod_includes_mod')) {
+                    attribute_map['FMLCorePluginContainsFMLMod'] = true
+                }
+            }
+            if (propertyBool('use_access_transformer')) {
+                attribute_map['FMLAT'] = propertyString('access_transformer_locations')
+            }
+            attributes(attribute_map)
+        }
     }
-  }
-  publications {
-    maven(MavenPublication) {
-      groupId = "gkappa"
-      artifactId = "wrapfix"
-      version = version
-      from components.java
-    }
-  }
+    finalizedBy(tasks.named(remapTaskName).get())
 }
 
-mixin {
-    add sourceSets.main, "mixins.wrapfix.refmap.json"
-    disableAnnotationProcessorCheck()
-}
 
 shadowJar {
-    archiveClassifier.set("shadow")
-    configurations = [project.configurations.shade]
-    relocate('com.ibm.icu','repack.com.ibm.icu')
-    dependencies {
-        include(dependency("com.ibm.icu:icu4j:76.1"))
-    }
-    manifest {
-        inheritFrom jar.manifest
-    }
-    finalizedBy('reobfShadowJar')
+    configurations = [project.configurations.shadow]
+    archiveClassifier = "shadow"
 }
 
-assemble.dependsOn shadowJar
-tasks.shadowJar.dependsOn("reobfJar")
-reobf {
-    shadowJar {}
+
+tasks.named(remapTaskName).configure {
+    doFirst {
+        logging.captureStandardOutput LogLevel.INFO
+    }
+    doLast {
+        logging.captureStandardOutput LogLevel.QUIET
+    }
 }
 
-artifacts {
-    archives shadowJar
-    archives sourcesJar
+compileTestJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
 }
+
+test {
+    useJUnitPlatform()
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    })
+    if (propertyBool('show_testing_output')) {
+        testLogging {
+            showStandardStreams = true
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+apply from: 'gradle/scripts/publishing.gradle'
+apply from: 'gradle/scripts/extra.gradle'

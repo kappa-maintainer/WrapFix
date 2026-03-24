@@ -1,7 +1,7 @@
-package gkappa.wrapfix.mixin;
+package top.outlands.wrapfix.mixin;
 
 import com.google.common.base.Joiner;
-import gkappa.wrapfix.CJKTextHelper;
+import top.outlands.wrapfix.CJKTextHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.resources.I18n;
@@ -29,7 +29,7 @@ public class MixinPageText {
         boolean unicode = font.getUnicodeFlag();
         if(useUnicode)
             font.setUnicodeFlag(true);
-        String text = I18n.format(unlocalizedText).replaceAll("&", "\u00a7");
+        String text = I18n.format(unlocalizedText).replaceAll("&", "§");
         String[] textEntries = text.split("<br>");
 
         List<List<String>> lines = new ArrayList<>();

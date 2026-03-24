@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "plugin": "top.outlands.wrapfix.WrapFixMixinConfigPlugin",
+  "package": "top.outlands.wrapfix.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "mixins.wrapfix.refmap.json",
+  "target": "@env(MOD)",
+  "client": [
+    "MixinRenderUtils",
+    "MixinPageText",
+    "MixinTextHelper",
+    "MixinTextSplitter"
+  ],
+  "setSourceFile": true,
+  "minVersion": "0.8.7"
+}
+ 
